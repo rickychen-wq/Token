@@ -421,13 +421,17 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
       <label for="pid">你的編號</label>
       <input id="pid" class="id-input" maxlength="2" inputmode="numeric" placeholder="00" autocomplete="off">
     </div>
+    <div class="field" id="nameWrap" style="display:none">
+      <label for="pname">你的名字</label>
+      <input id="pname" maxlength="12" placeholder="桌上會顯示這個" autocomplete="off">
+    </div>
     <div class="field">
       <label for="pw" id="pwLabel">密碼</label>
       <input id="pw" type="password" placeholder="輸入密碼" autocomplete="current-password">
     </div>
     <button class="btn" id="loginBtn" disabled>進入牌桌</button>
     <p class="hint" id="gateHint" style="margin-top:12px">
-      第一次登入這個編號，打的密碼就是以後的密碼。
+      打一組沒人用過的兩位數編號就能註冊。
     </p>
   </div>
 </div>
@@ -497,7 +501,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 
   E.defaultSettings = function () {
     return {
-      seatCount: 9,
+      seatCount: 10,
       sb: 25,
       bb: 50,
       startingChips: 5000,
@@ -1247,49 +1251,83 @@ function turnAlert(isMine) {
 /* ================= 前台 ================= */
 var myId = null, ST = null, mySeat = -1, raiseOpen = false, unsubs = [];
 
-/* ---------- 登入 ---------- */
+/* ---------- 註冊 / 登入 ---------- */
+var myName = '', isNew = false;
+
 $('pid').addEventListener('input', function () {
-  this.value = this.value.replace(/\D/g, '').slice(0, 2);
+  var v = this.value.replace(/\D/g, '').slice(0, 2);
+  this.value = v;
+  if (v.length === 2) lookup(v); else setMode(null);
 });
+
+function setMode(reg, name) {
+  isNew = reg === true;
+  var lab = $('pwLabel'), hint = $('gateHint'), btn = $('loginBtn');
+  $('nameWrap').style.display = reg === true ? '' : 'none';
+  if (reg === null) {
+    lab.textContent = '密碼';
+    hint.textContent = '打一組沒人用過的兩位數編號就能註冊。';
+    btn.textContent = '進入牌桌';
+  } else if (reg) {
+    lab.textContent = '設一組密碼';
+    hint.textContent = '這個編號還沒人用，填完就是你的。之後登入都用這組。';
+    btn.textContent = '註冊並入座';
+  } else {
+    lab.textContent = '密碼';
+    hint.textContent = '這個編號是「' + name + '」，打你設過的密碼。';
+    btn.textContent = '進入牌桌';
+  }
+}
+
+function lookup(id) {
+  db.collection('roster').doc(id).get().then(function (s) {
+    if (s.exists) setMode(false, s.data().name || id);
+    else setMode(true);
+  }).catch(function () { setMode(null); });
+}
 
 $('pw').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('loginBtn').click(); });
 
 $('loginBtn').addEventListener('click', function () {
-  var id = $('pid').value.trim(), pw = $('pw').value;
+  var id = $('pid').value.trim(), pw = $('pw').value, nm = $('pname').value.trim();
   if (!/^\d{2}$/.test(id)) return toast('編號是兩位數字', 'bad');
   if (!pw) return toast('要打密碼', 'bad');
+  if (isNew && !nm) return toast('要填名字', 'bad');
 
-  var btn = this;
-  btn.disabled = true;
-
+  var btn = this; btn.disabled = true;
   var rosterRef = db.collection('roster').doc(id);
   var pwRef = rosterRef.collection('private').doc('pw');
   var claimRef = rosterRef.collection('claims').doc(uid);
 
-  rosterRef.get().then(function (s) {
-    if (!s.exists) throw { code: 'no-roster' };
-    // 先當作已經設過密碼，直接驗
-    return tryPassword(claimRef, pw).catch(function () {
-      // 驗不過：可能是第一次登入，還沒設密碼 → 試著設定
-      return pwRef.set({ pw: pw }).then(function () {
-        return tryPassword(claimRef, pw);
-      }).catch(function () {
-        throw { code: 'bad-pw' };
-      });
+  var step;
+  if (isNew) {
+    step = rosterRef.set({ name: nm })
+      .then(function () { return pwRef.set({ pw: pw }); })
+      .then(function () { return tryPassword(claimRef, pw); })
+      .then(function () { myName = nm; });
+  } else {
+    step = rosterRef.get().then(function (s) {
+      if (!s.exists) throw { code: 'gone' };
+      myName = s.data().name || id;
+      return tryPassword(claimRef, pw).catch(function () { throw { code: 'bad-pw' }; });
     });
-  }).then(function () {
+  }
+
+  step.then(function () {
     myId = id;
     LS.set('lastId', id);
     startTable();
+    return send('join', { name: myName });
   }).catch(function (e) {
     btn.disabled = false;
-    if (e && e.code === 'no-roster') toast('編號 ' + id + ' 還沒登記，跟主辦說一聲', 'bad');
-    else if (e && e.code === 'bad-pw') toast('密碼不對', 'bad');
-    else toast('登入失敗，再試一次', 'bad');
+    if (e && e.code === 'bad-pw') toast('密碼不對', 'bad');
+    else if (e && e.code === 'gone') toast('這個編號不見了，重新整理看看', 'bad');
+    else toast('進不去，這個編號可能剛被別人註冊走了', 'bad');
   });
 });
 
 $('pid').value = LS.get('lastId', '');
+if ($('pid').value.length === 2) lookup($('pid').value);
 
 /* ---------- 進桌 ---------- */
 function startTable() {
@@ -1422,7 +1460,11 @@ function renderActions() {
 
   if (mySeat < 0) {
     box.classList.remove('on');
-    row.innerHTML = '<div class="waiting">後台還沒幫你安排座位</div>';
+    row.innerHTML = '<div class="waiting">正在幫你找位子…</div>';
+    if (!renderActions._asked) {
+      renderActions._asked = true;
+      send('join', { name: myName || myId });
+    }
     return;
   }
   var me = ST.seats[mySeat];
@@ -1520,7 +1562,9 @@ function renderDrawer() {
   h += '<div class="sec">你</div>';
   if (mySeat >= 0) {
     var me = ST.seats[mySeat];
-    h += '<button class="btn ghost" id="toggleSitout">' + (me.state === 'sitout' ? '回到牌桌' : '暫離一下') + '</button>';
+    h += '<button class="btn ghost" id="toggleSitout">' +
+         (me.state === 'sitout' ? '我要繼續玩' : '這幾輪先不玩') + '</button>';
+    h += '<p class="hint" style="margin-top:9px">開著的話會直接跳過你，不用一直蓋牌。想回來隨時按。</p>';
   }
   h += '<button class="btn ghost" style="margin-top:8px" id="muteBtn">' +
        (FX.muted ? '音效與震動：關' : '音效與震動：開') + '</button>';
