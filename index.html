@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080a09">
+<title>籌碼桌</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<main class="lobby">
+  <h1 class="brand">籌碼<span>桌</span></h1>
+  <p class="brand-sub">牌自己發，錢我來記</p>
+
+  <div class="panel">
+    <div class="field">
+      <label for="nick">你的名字</label>
+      <input id="nick" maxlength="12" placeholder="桌上會顯示這個" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>加入牌桌</h2>
+    <div class="field">
+      <label for="joincode">房號</label>
+      <input id="joincode" maxlength="4" inputmode="numeric" placeholder="4 位數字" autocomplete="off">
+    </div>
+    <button class="btn" id="joinBtn">進入牌桌</button>
+  </div>
+
+  <div class="panel">
+    <h2>開一桌新的</h2>
+    <div class="row">
+      <div class="field">
+        <label for="sb">小盲</label>
+        <input id="sb" type="number" value="25" min="1">
+      </div>
+      <div class="field">
+        <label for="bb">大盲</label>
+        <input id="bb" type="number" value="50" min="2">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="stack">起始籌碼</label>
+        <input id="stack" type="number" value="5000" min="1">
+      </div>
+      <div class="field">
+        <label for="seats">座位數</label>
+        <select id="seats">
+          <option>2</option><option>4</option><option>6</option>
+          <option>8</option><option selected>9</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn ghost" id="createBtn">建立牌桌</button>
+    <p class="hint" style="margin-top:12px">建的人就是房主，籌碼結算由你的裝置負責。</p>
+  </div>
+
+  <div class="panel" id="recoverPanel" style="display:none">
+    <h2>拿回房主權</h2>
+    <p class="hint" style="margin-bottom:12px">換手機或清過快取的話，用建房時給你的房主碼拿回控制權。</p>
+    <div class="row">
+      <div class="field"><label for="rcode">房號</label><input id="rcode" maxlength="4" inputmode="numeric"></div>
+      <div class="field"><label for="rkey">房主碼</label><input id="rkey" maxlength="6" inputmode="numeric"></div>
+    </div>
+    <button class="btn ghost" id="recoverBtn">拿回房主權</button>
+  </div>
+  <p class="hint" style="text-align:center">
+    <button id="toggleRecover" style="color:var(--gold);text-decoration:underline">我是房主但控制權不見了</button>
+  </p>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="js/config.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/lobby.js"></script>
+</body>
+</html>
