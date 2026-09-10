@@ -1135,7 +1135,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 <script>
 (function(){
 'use strict';
-var BUILD = '0910-1847';
+var BUILD = '0910-1902';
 /* ================= Firebase ================= */
 var FB_CONFIG = {
   apiKey: "AIzaSyC1ypnHgPuhjoe6u7D-opVzQSZEgv9q34k",
@@ -1562,6 +1562,345 @@ function maybeAutoNext(onTick) {
 }
 
 
+/* panel.js — 主辦功能，塞在前台的抽屜裡，要密碼才解得開。
+   前端的鎖只防誤觸；真正擋人的是 Firestore 規則。 */
+
+var ADM = {
+  unlocked: false,
+  firstRun: false,
+  roster: [],
+  awardPick: {},
+  ready: false
+};
+
+var ADMIN_DOC = db.collection('config').doc('admin');
+var ADMIN_PW = db.collection('config').doc('secret');
+
+/* 開場先確認自己是不是主辦 */
+function admBoot() {
+  return ADMIN_DOC.get().then(function (s) {
+    ADM.ready = true;
+    if (!s.exists) { ADM.firstRun = true; return; }
+    if (s.data().uid === uid) {
+      ADM.unlocked = true;
+      LOOP.isAdmin = true;
+      admLoadRoster();
+    }
+  }).catch(function () { ADM.ready = true; });
+}
+
+function admLoadRoster() {
+  return loadLoopRoster().then(function () {
+    ADM.roster = LOOP.roster.slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; });
+    if ($('drawer').classList.contains('on')) renderDrawer();
+  });
+}
+
+function admUnlock(pw, pw2) {
+  if (!pw) return Promise.reject(new Error('要打密碼'));
+  var claim = ADMIN_DOC.collection('claims').doc(uid);
+  var step;
+  if (ADM.firstRun) {
+    if (pw.length < 4) return Promise.reject(new Error('至少 4 碼'));
+    if (pw !== pw2) return Promise.reject(new Error('兩次打的不一樣'));
+    step = ADMIN_PW.set({ pw: pw })
+      .then(function () { return claim.set({ pw: pw, at: FV.serverTimestamp() }); })
+      .then(function () { return ADMIN_DOC.set({ uid: uid, at: FV.serverTimestamp() }); });
+  } else {
+    step = claim.set({ pw: pw, at: FV.serverTimestamp() })
+      .catch(function () { throw new Error('密碼不對'); })
+      .then(function () { return ADMIN_DOC.update({ uid: uid, at: FV.serverTimestamp() }); });
+  }
+  return step.then(function () {
+    ADM.unlocked = true;
+    ADM.firstRun = false;
+    LOOP.isAdmin = true;
+    return admEnsureTable();
+  }).then(admLoadRoster);
+}
+
+function admEnsureTable() {
+  return TABLE.get().then(function (s) {
+    if (s.exists) return;
+    var st = Engine.newRoom(Engine.defaultSettings());
+    st.settings.startingChips = 1500;
+    return TABLE.set({
+      status: st.status, settings: st.settings, seats: st.seats, hand: st.hand,
+      pots: [], pendingAward: null, log: [],
+      leaseUid: uid, leaseOwner: 'admin', leaseAt: FV.serverTimestamp()
+    });
+  });
+}
+
+function admOp(type, extra) {
+  return sendAct(type, extra, true).catch(function (e) {
+    toast('送不出去：' + (e.code || e.message), 'bad');
+    throw e;
+  });
+}
+
+/* ---------- 抽屜裡的 HTML ---------- */
+function admHTML() {
+  if (!ADM.ready) return '';
+
+  if (!ADM.unlocked) {
+    return '<div class="sec">主辦</div>' +
+      '<div class="field"><label>' + (ADM.firstRun ? '設定主辦密碼' : '主辦密碼') + '</label>' +
+      '<input id="admPw" type="password" placeholder="' + (ADM.firstRun ? '至少 4 碼' : '輸入密碼') + '"></div>' +
+      (ADM.firstRun
+        ? '<div class="field"><label>再打一次確認</label><input id="admPw2" type="password"></div>'
+        : '') +
+      '<button class="btn ghost" id="admUnlockBtn">' + (ADM.firstRun ? '啟用主辦' : '解鎖') + '</button>' +
+      (ADM.firstRun ? '<p class="hint" style="margin-top:9px">別用生日或學號，班上猜得到。</p>' : '');
+  }
+
+  if (!ST) return '<div class="sec">主辦</div><p class="hint">牌桌還沒載入。</p>';
+  var st = ST, h = '<div class="sec">主辦 · 牌局</div>';
+
+  if (st.pendingAward) {
+    st.pendingAward.pots.forEach(function (pot, i) {
+      var done = st.pendingAward.resolved[i];
+      h += '<div class="pot-award"><div class="h">' +
+        (i === 0 ? '主池' : '邊池 ' + i) + ' · ' + fmt(pot.amount) + '</div>';
+      if (done) {
+        h += '<div class="hint">已分給 ' + done.map(function (x) {
+          return esc(st.seats[x] ? st.seats[x].name : '?');
+        }).join('、') + '</div>';
+      } else {
+        h += '<div class="winner-pick">';
+        pot.eligible.forEach(function (x) {
+          var on = (ADM.awardPick[i] || []).indexOf(x) >= 0;
+          h += '<button class="' + (on ? 'on' : '') + '" data-aw="' + i + '" data-s="' + x + '">' +
+               esc(st.seats[x] ? st.seats[x].name : '?') + '</button>';
+        });
+        h += '</div><button class="btn" style="margin-top:10px" data-award="' + i + '">確認分池</button>';
+      }
+      h += '</div>';
+    });
+  } else if (st.hand.phase === 'idle') {
+    h += '<div class="field"><label>指定莊家位（第一手用）</label><select id="admDealer"><option value="-1">自動輪莊</option>';
+    st.seats.forEach(function (p, i) {
+      if (p && p.state === 'playing' && p.chips > 0) {
+        h += '<option value="' + i + '">' + (i + 1) + ' 號 · ' + esc(p.name) + '</option>';
+      }
+    });
+    h += '</select></div>';
+    h += '<button class="btn" id="admStart">' +
+         (LOOP.autoLeft > 0 ? '立刻開始（' + LOOP.autoLeft + ' 秒）' : '開始下一手') + '</button>';
+  } else {
+    h += '<p class="hint">進行中 · ' + Engine.phaseName(st.hand.phase) + '</p>' +
+         '<button class="btn danger" style="margin-top:9px" id="admAbort">作廢這手，籌碼退回</button>';
+  }
+
+  /* 名單 */
+  h += '<div class="sec">主辦 · 名單</div>';
+  var seatedIds = [];
+  st.seats.forEach(function (p, i) {
+    if (!p) return;
+    seatedIds.push(String(p.uid));
+    var out = p.chips <= 0;
+    h += '<div class="prow' + (out ? ' out' : '') + '">' +
+      '<span class="id">' + esc(p.uid) + '</span>' +
+      '<span class="who"><b>' + esc(p.name) + '</b><small>' + (i + 1) + ' 號位' +
+      (out ? '　已出局' : p.state === 'sitout' ? '　暫離' : p.state === 'waiting' ? '　下一手加入' : '') +
+      '</small></span><span class="money">' + fmt(p.chips) + '</span>' +
+      '<button data-add="' + i + '">補</button>' +
+      '<button data-set="' + i + '">改</button>' +
+      '<button data-pw="' + i + '">碼</button>' +
+      '<button data-del="' + i + '">移</button></div>';
+  });
+  if (!seatedIds.length) h += '<p class="hint">桌上還沒有人。</p>';
+
+  var bench = ADM.roster.filter(function (r) { return seatedIds.indexOf(r.id) < 0; });
+  if (bench.length) {
+    h += '<p class="hint" style="margin:12px 0 4px">不在桌上</p>';
+    bench.forEach(function (r) {
+      h += '<div class="prow out"><span class="id">' + esc(r.id) + '</span>' +
+        '<span class="who"><b>' + esc(r.name) + '</b><small>' +
+        (r.chips != null ? '離桌時剩 ' + fmt(r.chips) : '還沒上過桌') + '</small></span>' +
+        '<button data-back="' + esc(r.id) + '">拉回桌</button></div>';
+    });
+  }
+
+  /* 設定 */
+  var S = st.settings;
+  h += '<div class="sec">主辦 · 設定</div>';
+  h += '<div class="row"><div class="field"><label>小盲</label><input id="admSb" type="number" value="' + S.sb + '"></div>' +
+       '<div class="field"><label>大盲</label><input id="admBb" type="number" value="' + S.bb + '"></div></div>';
+  h += '<div class="row"><div class="field"><label>起始／補碼</label><input id="admStack" type="number" value="' + S.startingChips + '"></div>' +
+       '<div class="field"><label>座位數</label><select id="admSeats">';
+  [2, 4, 6, 8, 9, 10].forEach(function (n) {
+    h += '<option value="' + n + '"' + (st.seats.length === n ? ' selected' : '') + '>' + n + '</option>';
+  });
+  h += '</select></div></div>';
+  h += '<div class="row"><div class="field"><label>一手打完</label><select id="admAuto">' +
+       '<option value="1"' + (S.autoNext !== false ? ' selected' : '') + '>自動開下一手</option>' +
+       '<option value="0"' + (S.autoNext === false ? ' selected' : '') + '>停下來等我按</option></select></div>' +
+       '<div class="field"><label>間隔秒數</label><input id="admDelay" type="number" value="' + (S.autoDelay || 6) + '"></div></div>';
+  h += '<button class="btn ghost" id="admSave">儲存設定</button>';
+
+  /* 診斷 */
+  var H = st.hand;
+  h += '<div class="sec">主辦 · 診斷</div>';
+  h += '<div class="diagline">階段 <b>' + Engine.phaseName(H.phase) + '</b>　注額 <b>' + fmt(H.currentBet) +
+       '</b>　最小加注 <b>' + fmt(H.minRaise) + '</b></div>';
+  h += '<div class="diagline">小盲 ' + (H.sbSeat + 1) + '　大盲 ' + (H.bbSeat + 1) +
+       '　輪到 <b>' + (H.turnSeat >= 0 && st.seats[H.turnSeat] ? esc(st.seats[H.turnSeat].name) : '無') + '</b></div>';
+  h += '<div class="diagline">主機 <b>' + (LOOP.own ? '這台' : '別人的裝置') + '</b></div>';
+  st.seats.forEach(function (p, i) {
+    if (!p) return;
+    var f = [];
+    if (p.folded) f.push('蓋');
+    if (p.allIn) f.push('全下');
+    if (p.state !== 'playing') f.push(p.state === 'sitout' ? '暫離' : '等下手');
+    f.push(p.acted ? '已動作' : '未動作');
+    h += '<div class="diagline' + (H.turnSeat === i ? ' hot' : '') + '">' + (i + 1) + ' ' + esc(p.name) +
+         '　本街 ' + fmt(p.bet) + '　本手 ' + fmt(p.committed) + '　' + f.join('/') + '</div>';
+  });
+
+  h += '<button class="btn ghost" style="margin-top:14px" id="admLock">鎖回去</button>';
+  return h;
+}
+
+/* ---------- 綁事件 ---------- */
+function admBind() {
+  if (!ADM.ready) return;
+
+  if ($('admUnlockBtn')) {
+    $('admUnlockBtn').onclick = function () {
+      var b = this; b.disabled = true;
+      admUnlock($('admPw').value, $('admPw2') ? $('admPw2').value : null)
+        .then(function () { toast('主辦功能解開了'); renderDrawer(); })
+        .catch(function (e) { b.disabled = false; toast(e.message || '解不開', 'bad'); });
+    };
+    return;
+  }
+  if (!ADM.unlocked) return;
+
+  if ($('admLock')) $('admLock').onclick = function () {
+    ADM.unlocked = false; LOOP.isAdmin = false; renderDrawer();
+  };
+
+  if ($('admStart')) $('admStart').onclick = function () {
+    clearAutoNext();
+    admOp('start', { seat: +$('admDealer').value }).catch(function () {});
+  };
+
+  if ($('admAbort')) $('admAbort').onclick = function () {
+    if (confirm('作廢這一手？所有人下的注原數退回。')) admOp('abort').catch(function () {});
+  };
+
+  if ($('admSave')) $('admSave').onclick = function () {
+    var sb = Math.max(1, +$('admSb').value);
+    var bb = Math.max(sb + 1, +$('admBb').value);
+    var seatCount = +$('admSeats').value;
+    for (var i = seatCount; i < ST.seats.length; i++) {
+      if (ST.seats[i]) return toast('第 ' + (i + 1) + ' 號位還有人，先移除', 'bad');
+    }
+    admOp('settings', { settings: {
+      sb: sb, bb: bb,
+      startingChips: Math.max(bb, +$('admStack').value),
+      autoNext: $('admAuto').value === '1',
+      autoDelay: Math.max(2, Math.min(60, +$('admDelay').value || 6)),
+      seatCount: seatCount
+    } }).then(function () { toast('設定已儲存，下一手生效'); }).catch(function () {});
+  };
+
+  var root = $('drawerInner');
+
+  Array.prototype.slice.call(root.querySelectorAll('[data-aw]')).forEach(function (b) {
+    b.onclick = function () {
+      var pi = +b.getAttribute('data-aw'), s = +b.getAttribute('data-s');
+      ADM.awardPick[pi] = ADM.awardPick[pi] || [];
+      var k = ADM.awardPick[pi].indexOf(s);
+      if (k >= 0) ADM.awardPick[pi].splice(k, 1); else ADM.awardPick[pi].push(s);
+      renderDrawer();
+    };
+  });
+
+  Array.prototype.slice.call(root.querySelectorAll('[data-award]')).forEach(function (b) {
+    b.onclick = function () {
+      var pi = +b.getAttribute('data-award'), w = ADM.awardPick[pi] || [];
+      if (!w.length) return toast('先點贏家', 'bad');
+      admOp('award', { potIndex: pi, winners: w })
+        .then(function () { ADM.awardPick = {}; }).catch(function () {});
+    };
+  });
+
+  Array.prototype.slice.call(root.querySelectorAll('[data-add]')).forEach(function (b) {
+    b.onclick = function () {
+      var i = +b.getAttribute('data-add');
+      var v = prompt('補多少給 ' + ST.seats[i].name + '？', ST.settings.startingChips);
+      if (v) admOp('addchips', { seat: i, amount: Math.round(+v) }).catch(function () {});
+    };
+  });
+
+  Array.prototype.slice.call(root.querySelectorAll('[data-set]')).forEach(function (b) {
+    b.onclick = function () {
+      var i = +b.getAttribute('data-set');
+      var v = prompt('把 ' + ST.seats[i].name + ' 的籌碼直接改成？', ST.seats[i].chips);
+      if (v !== null) admOp('setchips', { seat: i, amount: Math.max(0, Math.round(+v)) }).catch(function () {});
+    };
+  });
+
+  Array.prototype.slice.call(root.querySelectorAll('[data-pw]')).forEach(function (b) {
+    b.onclick = function () {
+      var p = ST.seats[+b.getAttribute('data-pw')];
+      var ref = db.collection('roster').doc(String(p.uid)).collection('private').doc('pw');
+      ref.get().then(function (s) {
+        var cur = s.exists ? s.data().pw : null;
+        var v = prompt(cur === null
+          ? p.name + ' 還沒設過密碼。要現在指定一組嗎？'
+          : p.name + ' 目前密碼：' + cur + '\n\n要改就打新的，留空取消。', cur || '');
+        if (!v) return;
+        return ref.set({ pw: v })
+          .then(function () { return db.collection('roster').doc(String(p.uid)).collection('claims').get(); })
+          .then(function (q) {
+            var jobs = [];
+            q.forEach(function (d) { jobs.push(d.ref.delete().catch(function () {})); });
+            return Promise.all(jobs);
+          })
+          .then(function () { toast(p.name + ' 密碼改成 ' + v + '，他要重新登入'); });
+      }).catch(function () { toast('讀不到密碼', 'bad'); });
+    };
+  });
+
+  Array.prototype.slice.call(root.querySelectorAll('[data-del]')).forEach(function (b) {
+    b.onclick = function () {
+      var i = +b.getAttribute('data-del'), p = ST.seats[i];
+      if (!confirm('把 ' + p.name + '（' + p.uid + '）移出牌桌？\n\n籌碼會記著，之後可以原數拉回。')) return;
+      db.collection('roster').doc(String(p.uid))
+        .update({ chips: p.chips, blocked: true }).catch(function () {})
+        .then(function () { return admOp('kick', { seat: i }); })
+        .then(admLoadRoster).catch(function () {});
+    };
+  });
+
+  Array.prototype.slice.call(root.querySelectorAll('[data-back]')).forEach(function (b) {
+    b.onclick = function () {
+      var id = b.getAttribute('data-back');
+      var r = ADM.roster.filter(function (x) { return x.id === id; })[0];
+      if (!r) return;
+      var free = [];
+      ST.seats.forEach(function (p, i) { if (!p) free.push(i + 1); });
+      if (!free.length) return toast('沒有空位了', 'bad');
+      var v = prompt(r.name + ' 坐幾號位？空位：' + free.join('、'), free[0]);
+      if (!v) return;
+      var seat = Math.round(+v) - 1;
+      if (free.indexOf(seat + 1) < 0) return toast('那個位子不能坐', 'bad');
+      admOp('seat', { pid: id, name: r.name, seat: seat })
+        .then(function () {
+          return db.collection('roster').doc(id)
+            .update({ chips: FV.delete(), blocked: false }).catch(function () {});
+        })
+        .then(admLoadRoster)
+        .then(function () { toast(r.name + ' 回到 ' + (seat + 1) + ' 號位'); })
+        .catch(function () {});
+    };
+  });
+}
+
+
 /* ================= 前台 ================= */
 var myId = null, ST = null, mySeat = -1, raiseOpen = false, unsubs = [];
 
@@ -1631,6 +1970,7 @@ $('loginBtn').addEventListener('click', function () {
     myId = id;
     LS.set('lastId', id);
     startTable();
+    admBoot();
     return send('join', { name: myName });
   }).catch(function (e) {
     btn.disabled = false;
@@ -1654,7 +1994,7 @@ function startTable() {
       if (s.exists && s.data().msg) { toast(s.data().msg, 'bad'); s.ref.delete().catch(function () {}); }
     }, function () {}));
 
-  loopInit(myId, false, function () { ST = LOOP.ST; render(); }, function () { render(); });
+  loopInit(myId, ADM.unlocked, function () { ST = LOOP.ST; render(); }, function () { render(); });
 
   unsubs.push(TABLE.onSnapshot(function (snap) {
     if (!snap.exists) { toast('主辦還沒開桌', 'bad'); return; }
@@ -1935,7 +2275,9 @@ function renderDrawer() {
   h += '<button class="btn ghost" style="margin-top:8px" id="muteBtn">' +
        (FX.muted ? '音效與震動：關' : '音效與震動：開') + '</button>';
   h += '<button class="btn danger" style="margin-top:8px" id="logout">登出</button>';
+  h += admHTML();
   $('drawerInner').innerHTML = h;
+  admBind();
 
   if ($('toggleSitout')) $('toggleSitout').onclick = function () {
     send('sitout', { value: ST.seats[mySeat].state !== 'sitout' });
