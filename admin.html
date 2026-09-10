@@ -461,7 +461,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
     <div class="row">
       <div class="field"><label>起始／補碼金額</label><input id="setStack" type="number"></div>
       <div class="field"><label>座位數</label><select id="setSeats">
-        <option>2</option><option>4</option><option>6</option><option>8</option><option>9</option>
+        <option>2</option><option>4</option><option>6</option><option>8</option><option>9</option><option>10</option>
       </select></div>
     </div>
     <div class="field"><label>中途加入</label><select id="setLate">
@@ -504,7 +504,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 
   E.defaultSettings = function () {
     return {
-      seatCount: 9,
+      seatCount: 10,
       sb: 25,
       bb: 50,
       startingChips: 5000,
@@ -1357,7 +1357,9 @@ function startHostLoop() {
 function loadRoster() {
   return db.collection('roster').get().then(function (q) {
     rosterAll = [];
-    q.forEach(function (d) { rosterAll.push({ id: d.id, name: d.data().name || d.id, chips: d.data().chips }); });
+    q.forEach(function (d) {
+      rosterAll.push({ id: d.id, name: d.data().name || d.id, chips: d.data().chips, blocked: !!d.data().blocked });
+    });
     rosterAll.sort(function (a, b) { return a.id < b.id ? -1 : 1; });
     if (ST) renderPlayers();
   }).catch(function () {});
@@ -1382,6 +1384,7 @@ function enqueue(doc) {
         .set({ msg: err, at: FV.serverTimestamp() }).catch(function () {}));
     } else {
       jobs.push(flush());
+      if (a.type === 'join') jobs.push(loadRoster());
     }
     return Promise.all(jobs);
   }).catch(function (e) { console.warn(e); });
@@ -1391,6 +1394,19 @@ function enqueue(doc) {
 function applyAction(a) {
   var seat = Engine.seatOf(ST, a.id);
   switch (a.type) {
+    case 'join':
+      if (seat >= 0) return;                       // 已經在桌上，不用重複
+      if (ST.settings.joinMode === 'hostOnly') throw new Error('主辦鎖住了自由入座');
+      var r = null;
+      for (var k = 0; k < rosterAll.length; k++) if (rosterAll[k].id === a.id) r = rosterAll[k];
+      if (r && r.blocked) throw new Error('你被移出這桌了，找主辦');
+      var free = -1;
+      for (var j = 0; j < ST.seats.length; j++) if (!ST.seats[j]) { free = j; break; }
+      if (free < 0) throw new Error('位子滿了');
+      Engine.sit(ST, a.id, String(a.name || a.id).slice(0, 12), free);
+      if (r && r.chips != null) ST.seats[free].chips = r.chips;
+      if (ST.seats[free].chips <= 0) ST.seats[free].state = 'sitout';
+      break;
     case 'sitout':
       if (seat < 0) throw new Error('你不在桌上');
       Engine.setSitout(ST, seat, !!a.value);
@@ -1405,11 +1421,13 @@ function applyAction(a) {
 }
 
 function hostOp(fn) {
-  queue = queue.then(function () {
+  var out = queue.then(function () {
     fn(ST, Engine);
     return flush();
   });
-  return queue;
+  // 佇列本身永遠保持 resolved，否則一次例外就會把後面所有動作全部卡死
+  queue = out.catch(function () {});
+  return out;
 }
 
 function flush() {
@@ -1651,7 +1669,8 @@ function bindPlayers() {
         if (r.chips != null) st.seats[seat].chips = r.chips;
         if (st.seats[seat].chips <= 0) st.seats[seat].state = 'sitout';
       }).then(function () {
-        return db.collection('roster').doc(id).update({ chips: FV.delete() }).catch(function () {});
+        return db.collection('roster').doc(id)
+          .update({ chips: FV.delete(), blocked: false }).catch(function () {});
       }).then(loadRoster)
         .then(function () { toast(r.name + ' 回到 ' + (seat + 1) + ' 號位'); })
         .catch(function (e) { toast(e.message, 'bad'); });
@@ -1687,7 +1706,7 @@ function bindPlayers() {
       var p = ST.seats[i];
       if (!confirm('把 ' + p.name + '（編號 ' + p.uid + '）移出牌桌？\n\n籌碼會記在名單裡，之後可以原數拉回來。')) return;
       var keep = p.chips, pid = String(p.uid);
-      db.collection('roster').doc(pid).update({ chips: keep }).catch(function () {})
+      db.collection('roster').doc(pid).update({ chips: keep, blocked: true }).catch(function () {})
         .then(function () { return hostOp(function (st, E) { E.leave(st, i); }); })
         .then(loadRoster)
         .catch(function (e) { toast(e.message, 'bad'); });
