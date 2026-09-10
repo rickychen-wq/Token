@@ -387,14 +387,14 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 .prow.out .money{color:var(--red);text-shadow:none}
 
 .totals{display:flex;gap:10px;margin-bottom:18px}
-.totals div{
+.totals > div{
   flex:1;padding:14px 8px;text-align:center;border-radius:3px;
   background:linear-gradient(160deg,var(--glass),var(--glass-2));
   border:1px solid var(--edge);
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
 }
-.totals .k{font-size:11px;color:var(--fg-faint);letter-spacing:.16em;font-weight:500}
-.totals .v{
+.totals > div > .k{font-size:11px;color:var(--fg-faint);letter-spacing:.16em;font-weight:500}
+.totals > div > .v{
   font-family:var(--dsp);font-weight:900;font-size:21px;color:var(--cy-hi);
   text-shadow:0 0 20px rgba(63,199,255,.5);font-variant-numeric:tabular-nums;
 }
@@ -1144,7 +1144,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 <script>
 (function(){
 'use strict';
-var BUILD = '0910-1843';
+var BUILD = '0910-1847';
 /* ================= Firebase ================= */
 var FB_CONFIG = {
   apiKey: "AIzaSyC1ypnHgPuhjoe6u7D-opVzQSZEgv9q34k",
@@ -1661,6 +1661,13 @@ function startHostLoop() {
     render();
     maybeAutoNext(function () { renderHandPanel(); });
   }, function () {});
+}
+
+function loadRoster() {
+  return loadLoopRoster().then(function () {
+    rosterAll = LOOP.roster.slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; });
+    if (ST) renderPlayers();
+  });
 }
 
 /* 後台的操作一律送進同一條佇列，由當下的主機執行 */
