@@ -443,11 +443,19 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 }
 @media (max-width:400px){ .board .c{width:26px;height:36px} }
 
-/* ---- 攤牌判定 ---- */
-.showdown{text-align:center}
-.sd-h{font-size:13px;color:var(--fg-dim);margin-bottom:10px;letter-spacing:.06em}
-.sd-h b{font-family:var(--dsp);color:var(--gold);font-size:16px;text-shadow:0 0 14px rgba(255,211,122,.5)}
-.showdown .winner-pick{justify-content:center}
+/* ---- 攤牌 ---- */
+.showdown{text-align:center;padding:4px 0 2px}
+.sd-h{font-size:13px;color:var(--gold);margin-bottom:9px;letter-spacing:.1em}
+.sd-pot{
+  font-size:12.5px;color:var(--fg-dim);padding:6px 0;
+  border-top:1px solid rgba(88,190,255,.1);
+}
+.sd-pot b{font-family:var(--dsp);color:var(--gold);font-size:14px}
+.sd-pot.done{color:var(--grn)}
+.build{
+  font-family:var(--ui);font-weight:600;font-size:10.5px;color:var(--fg-faint);
+  letter-spacing:.1em;
+}
 
 </style>
 </head>
@@ -1127,6 +1135,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 <script>
 (function(){
 'use strict';
+var BUILD = '0910-1843';
 /* ================= Firebase ================= */
 var FB_CONFIG = {
   apiKey: "AIzaSyC1ypnHgPuhjoe6u7D-opVzQSZEgv9q34k",
@@ -1489,12 +1498,6 @@ function applyAct(a) {
       E.setSitout(st, seat, !!a.value);
       return;
 
-    case 'award':
-      if (seat < 0) throw new Error('你不在桌上');
-      E.award(st, a.potIndex, a.winners);
-      noteLog(st, '（由 ' + st.seats[seat].name + ' 判定）');
-      return;
-
     case 'fold': case 'check': case 'call': case 'raise': case 'allin':
       if (seat < 0) throw new Error('你不在桌上');
       E.act(st, seat, a.type, a.amount);
@@ -1820,7 +1823,7 @@ function renderActions() {
   }
   if (ST.hand.phase === 'showdown' && ST.pendingAward) {
     box.classList.remove('on');
-    renderAwardUI(row);
+    renderShowdown(row);
     return;
   }
   if (ST.hand.turnSeat !== mySeat) {
@@ -1857,44 +1860,20 @@ function renderActions() {
   if (raiseOpen) setupRaise(L); else box.classList.remove('on');
 }
 
-var awardPick = {};
-function renderAwardUI(row) {
-  var pa = ST.pendingAward, h = '<div class="showdown">';
-  var pending = -1;
-  for (var i = 0; i < pa.pots.length; i++) if (!pa.resolved[i]) { pending = i; break; }
-
-  if (pending < 0) { row.innerHTML = '<div class="waiting">結算中…</div>'; return; }
-
-  var pot = pa.pots[pending];
-  h += '<div class="sd-h">' + (pending === 0 ? '主池' : '邊池 ' + pending) +
-       ' <b>' + fmt(pot.amount) + '</b>　誰贏了？</div>';
-  h += '<div class="winner-pick">';
-  pot.eligible.forEach(function (sIdx) {
-    var on = (awardPick[pending] || []).indexOf(sIdx) >= 0;
-    h += '<button class="' + (on ? 'on' : '') + '" data-w="' + sIdx + '">' +
-         esc(ST.seats[sIdx] ? ST.seats[sIdx].name : '?') + '</button>';
+function renderShowdown(row) {
+  var pa = ST.pendingAward;
+  var h = '<div class="showdown"><div class="sd-h">攤牌，等主辦結算</div>';
+  pa.pots.forEach(function (pot, i) {
+    var done = pa.resolved[i];
+    h += '<div class="sd-pot' + (done ? ' done' : '') + '">' +
+      (i === 0 ? '主池' : '邊池 ' + i) + ' <b>' + fmt(pot.amount) + '</b>　' +
+      (done
+        ? '→ ' + done.map(function (x) { return esc(ST.seats[x] ? ST.seats[x].name : '?'); }).join('、')
+        : pot.eligible.map(function (x) { return esc(ST.seats[x] ? ST.seats[x].name : '?'); }).join(' / ')) +
+      '</div>';
   });
-  h += '</div>';
-  h += '<button class="btn" style="margin-top:9px" id="doAward">確認</button>';
-  h += '<p class="hint" style="margin-top:8px">平手就把贏的人都點起來，會自動平分。</p>';
   h += '</div>';
   row.innerHTML = h;
-
-  Array.prototype.slice.call(row.querySelectorAll('[data-w]')).forEach(function (b) {
-    b.onclick = function () {
-      var sIdx = +b.getAttribute('data-w');
-      awardPick[pending] = awardPick[pending] || [];
-      var k = awardPick[pending].indexOf(sIdx);
-      if (k >= 0) awardPick[pending].splice(k, 1); else awardPick[pending].push(sIdx);
-      renderAwardUI(row);
-    };
-  });
-  $('doAward').onclick = function () {
-    var w = awardPick[pending] || [];
-    if (!w.length) return toast('先點贏家', 'bad');
-    awardPick = {};
-    send('award', { potIndex: pending, winners: w });
-  };
 }
 
 function setupRaise(L) {
@@ -1941,7 +1920,8 @@ $('drawer').addEventListener('click', function (e) { if (e.target === $('drawer'
 
 function renderDrawer() {
   if (!ST) return;
-  var h = '<h3>牌桌</h3><p class="hint">你是編號 ' + myId + '</p>';
+  var h = '<h3>牌桌</h3><p class="hint">你是編號 ' + myId +
+          '　<span class="build">版本 ' + BUILD + '</span></p>';
   h += '<div class="sec">盲注</div><p class="hint">小盲 ' + fmt(ST.settings.sb) + '　大盲 ' + fmt(ST.settings.bb) + '</p>';
   h += '<div class="sec">紀錄</div><div class="logbox">' +
        (ST.log || []).slice().reverse().map(function (l) { return esc(l.text); }).join('<br>') + '</div>';
