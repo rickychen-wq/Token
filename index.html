@@ -157,25 +157,25 @@ input,select{font-family:var(--ui);font-size:16px;font-weight:600}
 }
 
 /* 狀態條 */
-.mybar{display:flex;gap:8px;padding:12px 14px 4px;flex:none}
+.mybar{display:flex;gap:6px;padding:10px 10px 2px;flex:none}
 .mybar .box{
-  flex:1;text-align:center;padding:9px 3px;border-radius:3px;
+  flex:1;min-width:0;text-align:center;padding:7px 2px;border-radius:3px;
   background:linear-gradient(160deg,var(--glass),var(--glass-2));
   border:1px solid var(--edge);
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
-.mybar .k{font-size:10.5px;color:var(--fg-faint);letter-spacing:.14em;font-weight:500}
+.mybar .k{font-size:9.5px;white-space:nowrap;color:var(--fg-faint);letter-spacing:.14em;font-weight:500}
 .mybar .v{
-  font-family:var(--dsp);font-size:17px;font-weight:700;line-height:1.45;
+  font-family:var(--dsp);font-size:clamp(13px,4.4vw,17px);font-weight:700;line-height:1.45;
   color:var(--cy-hi);text-shadow:0 0 16px rgba(63,199,255,.55);
 }
-.mybar .v.small{font-family:var(--tc);font-size:12.5px;font-weight:500;color:var(--fg);text-shadow:none}
+.mybar .v.small{font-family:var(--tc);font-size:clamp(10.5px,3.2vw,12.5px);white-space:nowrap;font-weight:500;color:var(--fg);text-shadow:none}
 .mybar .v.now{color:var(--gold);text-shadow:0 0 18px rgba(255,211,122,.75);animation:blink 1.1s steps(2) infinite}
 @keyframes blink{50%{opacity:.4}}
 
 /* 桌面 */
 .felt{
-  position:relative;flex:1;margin:12px 14px 14px;min-height:330px;border-radius:44%/30%;
+  position:relative;flex:1;margin:10px;min-height:0;border-radius:44%/30%;
   background:
     radial-gradient(ellipse at 50% 40%,rgba(63,199,255,.12),transparent 56%),
     radial-gradient(ellipse at 50% 46%,#0C2038,#070E1E 62%,#04070F);
@@ -189,10 +189,10 @@ input,select{font-family:var(--ui);font-size:16px;font-weight:600}
   content:'';position:absolute;inset:18px;border-radius:44%/30%;pointer-events:none;
   border:1px solid rgba(63,199,255,.13);
 }
-.center{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);text-align:center;width:74%;z-index:3}
+.center{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);text-align:center;z-index:3;pointer-events:none}
 .pot-label{font-family:var(--dsp);color:var(--fg-faint);font-size:9.5px;letter-spacing:.36em;font-weight:500;margin-bottom:2px}
 .pot{
-  font-family:var(--dsp);font-weight:900;font-size:46px;line-height:1.1;
+  font-family:var(--dsp);font-weight:900;font-size:clamp(28px,11vw,46px);line-height:1.1;
   color:var(--gold);letter-spacing:.01em;font-variant-numeric:tabular-nums;
   text-shadow:0 0 6px rgba(255,211,122,.8),0 0 34px rgba(255,211,122,.45);
 }
@@ -213,6 +213,7 @@ input,select{font-family:var(--ui);font-size:16px;font-weight:600}
 
 /* 座位 */
 .seat{position:absolute;transform:translate(-50%,-50%);width:96px;text-align:center;z-index:4}
+.seat .card{padding:7px 4px}
 .seat .card{
   position:relative;padding:9px 6px;border-radius:3px;
   background:linear-gradient(160deg,rgba(14,30,52,.9),rgba(8,16,30,.9));
@@ -259,7 +260,7 @@ input,select{font-family:var(--ui);font-size:16px;font-weight:600}
 }
 @keyframes pop{from{transform:scale(.4);opacity:0}}
 .seat .tag{
-  position:absolute;top:-9px;right:-7px;font-family:var(--dsp);font-size:9px;font-weight:900;
+  position:absolute;top:-8px;right:-5px;font-family:var(--tc);font-size:9px;font-weight:700;white-space:nowrap;
   color:#04070F;border-radius:3px;padding:2px 7px;letter-spacing:.06em;
   background:linear-gradient(135deg,var(--cy-hi),var(--cy));
   box-shadow:0 0 16px rgba(63,199,255,.8);
@@ -267,12 +268,12 @@ input,select{font-family:var(--ui);font-size:16px;font-weight:600}
 
 /* 動作列 */
 .actions{
-  flex:none;padding:12px 14px 18px;
+  flex:none;padding:10px 11px calc(14px + env(safe-area-inset-bottom));
   border-top:1px solid var(--edge);background:rgba(7,13,26,.8);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
 }
-.act-row{display:flex;gap:9px}
-.act-row .btn{padding:17px 6px;font-size:13px}
+.act-row{display:flex;gap:7px}
+.act-row .btn{padding:16px 4px;font-size:clamp(11px,3.4vw,13px);letter-spacing:.06em}
 .raise-box{display:none;margin-bottom:11px}
 .raise-box.on{display:block;animation:slideUp .22s ease-out}
 @keyframes slideUp{from{transform:translateY(12px);opacity:0}}
@@ -399,10 +400,15 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 }
 
 @media (max-width:400px){
-  .seat{width:82px}
-  .seat .nm{font-size:11px}
-  .pot{font-size:38px}
-  .brand{font-size:33px}
+  .brand{font-size:32px}
+  .topbar{padding:9px 12px}
+  .phase{font-size:10.5px;margin-top:7px}
+  .pot-label{font-size:8.5px;letter-spacing:.28em}
+}
+@media (max-height:700px){
+  .board{margin-bottom:7px}
+  .stack{height:11px;margin-top:6px}
+  .stack i{height:4px}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
@@ -417,9 +423,9 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 .diagline.hot b{color:var(--gold)}
 
 /* ---- 公共牌位 ---- */
-.board{display:flex;justify-content:center;gap:6px;margin-bottom:14px}
+.board{display:flex;justify-content:center;gap:5px;margin-bottom:10px}
 .board .c{
-  width:30px;height:42px;border-radius:4px;
+  width:clamp(21px,6.4vw,30px);height:clamp(30px,9vw,42px);border-radius:4px;
   border:1px dashed rgba(88,190,255,.3);
   background:rgba(4,10,20,.4);
 }
@@ -1104,9 +1110,9 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 
   E.positionLabel = function (st, seat) {
     if (st.hand.phase === 'idle') return '';
-    if (seat === st.hand.dealerSeat) return 'D';
-    if (seat === st.hand.sbSeat) return 'SB';
-    if (seat === st.hand.bbSeat) return 'BB';
+    if (seat === st.hand.dealerSeat) return '莊';
+    if (seat === st.hand.sbSeat) return '小盲';
+    if (seat === st.hand.bbSeat) return '大盲';
     return '';
   };
 
@@ -1460,8 +1466,7 @@ function renderCenter() {
   setPot(total);
   setStack(total, ST.settings.bb);
 
-  var ph = ST.hand.phase === 'idle' ? '等待開牌' : Engine.phaseName(ST.hand.phase);
-  $('phase').textContent = ST.hand.no ? '第 ' + ST.hand.no + ' 手 · ' + ph : ph;
+  $('phase').textContent = ST.hand.phase === 'idle' ? '等待開牌' : Engine.phaseName(ST.hand.phase);
   $('sidepots').textContent = (ST.pots && ST.pots.length > 1)
     ? ST.pots.map(function (p, i) { return (i === 0 ? '主池' : '邊池' + i) + ' ' + fmt(p.amount); }).join('　')
     : '';
@@ -1470,12 +1475,32 @@ function renderCenter() {
 function renderSeats() {
   var felt = $('felt');
   Array.prototype.slice.call(felt.querySelectorAll('.seat')).forEach(function (n) { n.remove(); });
-  var n = ST.seats.length, base = mySeat >= 0 ? mySeat : 0;
+
+  var n = ST.seats.length;
+  var W = felt.clientWidth || 320, H = felt.clientHeight || 380;
+
+  // 依照實際寬度和人數決定卡片大小，人多就縮小，不讓相鄰的疊到
+  var perSide = Math.max(3, Math.ceil(n / 2));
+  var w = Math.max(50, Math.min(92, (W - 18) / (perSide * 1.02)));
+  var cardH = w * 0.68;
+
+  // 橢圓半徑用像素算再換成百分比，確保卡片整個留在桌面裡
+  var rx = ((W / 2) - (w / 2) - 2) / (W / 2) * 50;
+  var ry = ((H / 2) - (cardH / 2) - 2) / (H / 2) * 50;
+
+  var base = mySeat >= 0 ? mySeat : 0;
   for (var i = 0; i < n; i++) {
     var d = ((i - base) % n + n) % n;
     var th = (90 + d * 360 / n) * Math.PI / 180;
-    felt.appendChild(seatNode(i, 50 + 41 * Math.cos(th), 50 + 37 * Math.sin(th)));
+    var el = seatNode(i, 50 + rx * Math.cos(th), 50 + ry * Math.sin(th));
+    el.style.width = Math.round(w) + 'px';
+    el.style.fontSize = (w < 66 ? 0.86 : 1) + 'em';
+    felt.appendChild(el);
   }
+
+  // 中間那塊留出左右兩張卡的寬度，才不會被壓到
+  var c = felt.querySelector('.center');
+  if (c) c.style.width = Math.max(120, W - w * 2 - 22) + 'px';
 }
 
 function seatNode(i, x, y) {
