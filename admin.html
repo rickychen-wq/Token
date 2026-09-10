@@ -408,6 +408,14 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
 
+.diagline{
+  font-family:var(--ui);font-weight:600;font-size:12.5px;color:var(--fg-dim);
+  padding:5px 0;border-bottom:1px solid rgba(88,190,255,.08);letter-spacing:.02em;
+}
+.diagline b{color:var(--cy-hi);font-weight:700}
+.diagline.hot{color:var(--gold)}
+.diagline.hot b{color:var(--gold)}
+
 </style>
 </head>
 <body>
@@ -477,6 +485,12 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
     </div>
     <button class="btn ghost" id="saveSettings">儲存設定</button>
     <p class="hint" style="margin-top:10px">座位數改小的話，超過範圍的人要先移除。</p>
+  </div>
+
+  <div class="panel">
+    <h2>診斷</h2>
+    <div id="diag"></div>
+    <p class="hint" style="margin-top:10px">卡住的時候把這一段截給我，就知道是誰沒動作。</p>
   </div>
 
   <div class="panel">
@@ -1254,6 +1268,7 @@ function turnAlert(isMine) {
 /* ================= 後台 ================= */
 var ST = null, queue = Promise.resolve(), seen = {}, beatTimer = null, awardPick = {};
 var rosterAll = [], autoTimer = null, autoLeft = 0;
+var SESSION = String(Date.now()) + '-' + Math.random().toString(36).slice(2, 8);
 
 /* ---------- 登入 / 初始化 ---------- */
 var ADMIN_DOC = db.collection('config').doc('admin');
@@ -1332,14 +1347,36 @@ function ensureTable() {
 }
 
 /* ---------- 權威迴圈 ---------- */
-function startHostLoop() {
+function startHostLoop(force) {
   TABLE.get().then(function (s) {
-    ST = normalize(s.data());
+    var d = s.data();
+    var otherBeat = d.hostHeartbeat && d.hostHeartbeat.toMillis ? d.hostHeartbeat.toMillis() : 0;
+    var otherFresh = Date.now() - otherBeat < 15000;
+    if (!force && d.hostSession && d.hostSession !== SESSION && otherFresh) {
+      $('handPanel').innerHTML =
+        '<h2>後台已經在別的地方開著</h2>' +
+        '<p class="hint">同一個後台只能有一份在跑，兩份會互相搶著算籌碼，牌局會亂掉。' +
+        '把另一台或另一個分頁關掉，或按下面接手。</p>' +
+        '<button class="btn danger" id="forceHost" style="margin-top:12px">在這台接手</button>';
+      $('forceHost').onclick = function () { startHostLoop(true); };
+      return;
+    }
+
+    ST = normalize(d);
     render();
 
     beat();
     beatTimer = setInterval(beat, 5000);
     loadRoster();
+
+    TABLE.onSnapshot(function (snap) {
+      var x = snap.data();
+      if (x && x.hostSession && x.hostSession !== SESSION) {
+        clearInterval(beatTimer); clearAuto();
+        $('handPanel').innerHTML = '<h2>已被別的裝置接手</h2>' +
+          '<p class="hint">這台後台停止運作了，避免兩份互相打架。要拿回來就重新整理。</p>';
+      }
+    }, function () {});
 
     TABLE.collection('actions').orderBy('ts', 'asc').onSnapshot(function (snap) {
       snap.docChanges().forEach(function (ch) {
@@ -1372,7 +1409,9 @@ function normalize(d) {
   };
 }
 
-function beat() { TABLE.update({ hostHeartbeat: FV.serverTimestamp() }).catch(function () {}); }
+function beat() {
+  TABLE.update({ hostHeartbeat: FV.serverTimestamp(), hostSession: SESSION }).catch(function () {});
+}
 
 function enqueue(doc) {
   queue = queue.then(function () {
@@ -1436,7 +1475,7 @@ function flush() {
   return TABLE.set({
     status: st.status, settings: st.settings, seats: st.seats, hand: st.hand,
     pots: st.pots || [], pendingAward: st.pendingAward || null, log: st.log || [],
-    hostHeartbeat: FV.serverTimestamp()
+    hostHeartbeat: FV.serverTimestamp(), hostSession: SESSION
   }, { merge: true });
 }
 
@@ -1475,9 +1514,35 @@ function render() {
   renderHandPanel();
   renderPlayers();
   renderSettings();
+  renderDiag();
   $('adminLog').innerHTML = (ST.log || []).slice().reverse()
     .map(function (l) { return esc(l.text); }).join('<br>');
   maybeAutoNext();
+}
+
+function renderDiag() {
+  var el = $('diag');
+  if (!el || !ST) return;
+  var H = ST.hand;
+  var h = '<div class="diagline">階段 <b>' + Engine.phaseName(H.phase) + '</b>' +
+          '　目前注額 <b>' + fmt(H.currentBet) + '</b>' +
+          '　最小加注 <b>' + fmt(H.minRaise) + '</b></div>';
+  h += '<div class="diagline">莊 ' + (H.dealerSeat + 1) + '　小盲 ' + (H.sbSeat + 1) +
+       '　大盲 ' + (H.bbSeat + 1) +
+       '　輪到 <b>' + (H.turnSeat >= 0 && ST.seats[H.turnSeat] ? ST.seats[H.turnSeat].name : '無') + '</b></div>';
+  ST.seats.forEach(function (p, i) {
+    if (!p) return;
+    var flags = [];
+    if (p.folded) flags.push('蓋');
+    if (p.allIn) flags.push('全下');
+    if (p.state !== 'playing') flags.push(p.state === 'sitout' ? '暫離' : '等下手');
+    flags.push(p.acted ? '已動作' : '未動作');
+    h += '<div class="diagline' + (H.turnSeat === i ? ' hot' : '') + '">' +
+         (i + 1) + ' ' + esc(p.name) +
+         '　本街下注 ' + fmt(p.bet) + '　本手投入 ' + fmt(p.committed) +
+         '　' + flags.join('/') + '</div>';
+  });
+  el.innerHTML = h;
 }
 
 function renderTotals() {
