@@ -443,6 +443,12 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 }
 @media (max-width:400px){ .board .c{width:26px;height:36px} }
 
+/* ---- 攤牌判定 ---- */
+.showdown{text-align:center}
+.sd-h{font-size:13px;color:var(--fg-dim);margin-bottom:10px;letter-spacing:.06em}
+.sd-h b{font-family:var(--dsp);color:var(--gold);font-size:16px;text-shadow:0 0 14px rgba(255,211,122,.5)}
+.showdown .winner-pick{justify-content:center}
+
 </style>
 </head>
 <body>
@@ -773,9 +779,8 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
     st.hand.currentBet = st.settings.bb;
     st.hand.minRaise = st.settings.bb;
 
-    st.hand.turnSeat = headsUp
-      ? sbSeat
-      : nextIdx(st.seats, bbSeat, canAct);
+    // 每一街都從大盲下一家開始（單挑也一樣）
+    st.hand.turnSeat = nextIdx(st.seats, bbSeat, canAct);
 
     // 貼完盲注就全下的話，這個位子其實不能動作，往下找
     if (st.hand.turnSeat >= 0 && !canAct(st.seats[st.hand.turnSeat])) {
@@ -956,7 +961,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
     if (idx >= PHASES.length - 1) { toShowdown(st); return; }
 
     st.hand.phase = PHASES[idx + 1];
-    var first = nextIdx(st.seats, st.hand.dealerSeat, canAct);
+    var first = nextIdx(st.seats, st.hand.bbSeat, canAct);
     st.hand.turnSeat = countWhere(st.seats, canAct) >= 2 ? first : -1;
     log(st, '— ' + phaseName(st.hand.phase) + ' —');
     if (st.hand.turnSeat < 0) settleStreet(st);
@@ -1110,7 +1115,6 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 
   E.positionLabel = function (st, seat) {
     if (st.hand.phase === 'idle') return '';
-    if (seat === st.hand.dealerSeat) return '莊';
     if (seat === st.hand.sbSeat) return '小盲';
     if (seat === st.hand.bbSeat) return '大盲';
     return '';
@@ -1284,6 +1288,277 @@ function turnAlert(isMine) {
 }
 
 
+/* loop.js — 租約式主機迴圈。
+   誰的頁面開著，誰的裝置就負責算籌碼；他關掉了 12 秒後自動換下一個人接手。
+   後台在場時永遠優先拿到租約。 */
+
+var LOOP = {
+  me: null,          // 我的識別：玩家編號，或 'admin'
+  isAdmin: false,
+  ST: null,
+  own: false,
+  queue: Promise.resolve(),
+  seen: {},
+  unsubActions: null,
+  renewTimer: null,
+  autoTimer: null,
+  autoLeft: 0,
+  roster: [],
+  onState: function () {},
+  onOwn: function () {}
+};
+
+var LEASE_MS = 12000;
+
+function loopInit(me, isAdmin, onState, onOwn) {
+  LOOP.me = me;
+  LOOP.isAdmin = !!isAdmin;
+  LOOP.onState = onState || function () {};
+  LOOP.onOwn = onOwn || function () {};
+  loadLoopRoster();
+  setInterval(loadLoopRoster, 30000);
+}
+
+function loadLoopRoster() {
+  return db.collection('roster').get().then(function (q) {
+    LOOP.roster = [];
+    q.forEach(function (d) {
+      LOOP.roster.push({
+        id: d.id, name: d.data().name || d.id,
+        chips: d.data().chips, blocked: !!d.data().blocked
+      });
+    });
+  }).catch(function () {});
+}
+
+function normalizeState(d) {
+  return {
+    status: d.status, settings: d.settings, seats: d.seats || [], hand: d.hand,
+    pots: d.pots || [], pendingAward: d.pendingAward || null, log: d.log || []
+  };
+}
+
+/* 每次牌桌快照都呼叫這個 */
+function loopOnSnapshot(d) {
+  if (!LOOP.own) LOOP.ST = normalizeState(d);   // 自己在當主機就不吃回音
+
+  var at = d.leaseAt && d.leaseAt.toMillis ? d.leaseAt.toMillis() : 0;
+  var stale = Date.now() - at > LEASE_MS;
+  var mine = d.leaseUid === uid;
+
+  if (mine) {
+    setOwn(true);
+  } else if (LOOP.isAdmin || stale) {
+    claimLease();       // 後台隨時可搶；一般玩家等租約過期
+    setOwn(false);
+  } else {
+    setOwn(false);
+  }
+}
+
+function claimLease() {
+  return TABLE.update({
+    leaseUid: uid, leaseOwner: LOOP.me, leaseAt: FV.serverTimestamp()
+  }).catch(function () {});
+}
+
+function setOwn(v) {
+  if (LOOP.own === v) return;
+  LOOP.own = v;
+  LOOP.onOwn(v);
+
+  if (v) {
+    window.__isHost = true;
+    keepAwake();
+    LOOP.renewTimer = setInterval(function () {
+      TABLE.update({ leaseAt: FV.serverTimestamp() }).catch(function () {});
+    }, 4000);
+    LOOP.unsubActions = TABLE.collection('actions').orderBy('ts', 'asc')
+      .onSnapshot(function (snap) {
+        snap.docChanges().forEach(function (ch) {
+          if (ch.type === 'removed') return;
+          var doc = ch.doc;
+          if (!doc.data().ts) return;
+          if (LOOP.seen[doc.id]) return;
+          LOOP.seen[doc.id] = true;
+          enqueueAction(doc);
+        });
+      }, function () {});
+  } else {
+    window.__isHost = false;
+    clearInterval(LOOP.renewTimer);
+    clearAutoNext();
+    if (LOOP.unsubActions) { try { LOOP.unsubActions(); } catch (e) {} }
+    LOOP.unsubActions = null;
+  }
+}
+
+function enqueueAction(doc) {
+  LOOP.queue = LOOP.queue.then(function () {
+    var a = doc.data(), err = null;
+    try { applyAct(a); } catch (e) { err = e.message || String(e); }
+    var jobs = [doc.ref.delete().catch(function () {})];
+    if (err && a.id) {
+      jobs.push(TABLE.collection('errors').doc(String(a.id))
+        .set({ msg: err, at: FV.serverTimestamp() }).catch(function () {}));
+    } else if (!err) {
+      jobs.push(loopFlush());
+      if (a.type === 'join' || a.type === 'seat') jobs.push(loadLoopRoster());
+    }
+    return Promise.all(jobs);
+  }).catch(function () {});
+  return LOOP.queue;
+}
+
+function rosterOf(id) {
+  for (var i = 0; i < LOOP.roster.length; i++) if (LOOP.roster[i].id === id) return LOOP.roster[i];
+  return null;
+}
+
+function noteLog(st, text) {
+  st.log = (st.log || []).concat([{ t: Date.now(), text: text }]).slice(-25);
+}
+
+function seatWithChips(st, id, name, seat) {
+  Engine.sit(st, id, name, seat);
+  var r = rosterOf(id);
+  if (r && r.chips != null) st.seats[seat].chips = r.chips;
+  if (st.seats[seat].chips <= 0) st.seats[seat].state = 'sitout';
+}
+
+function applyAct(a) {
+  var st = LOOP.ST, E = Engine;
+
+  if (a.admin) {
+    switch (a.type) {
+      case 'start':
+        E.startHand(st, a.seat >= 0 ? a.seat : undefined);
+        return;
+      case 'settings':
+        Object.keys(a.settings || {}).forEach(function (k) { st.settings[k] = a.settings[k]; });
+        if (a.settings && a.settings.seatCount && a.settings.seatCount !== st.seats.length) {
+          var seats = st.seats.slice(0, a.settings.seatCount);
+          while (seats.length < a.settings.seatCount) seats.push(null);
+          st.seats = seats;
+        }
+        return;
+      case 'addchips': E.addChips(st, a.seat, a.amount); return;
+      case 'setchips':
+        st.seats[a.seat].chips = Math.max(0, Math.round(a.amount));
+        if (st.seats[a.seat].chips > 0 && st.seats[a.seat].state === 'sitout' && st.hand.phase === 'idle') {
+          st.seats[a.seat].state = 'playing';
+        }
+        noteLog(st, st.seats[a.seat].name + ' 籌碼調整為 ' + st.seats[a.seat].chips);
+        return;
+      case 'move': E.move(st, a.seat, a.to); return;
+      case 'kick': E.leave(st, a.seat); return;
+      case 'seat': seatWithChips(st, a.pid, a.name, a.seat); return;
+      case 'award': E.award(st, a.potIndex, a.winners); return;
+      case 'abort':
+        st.seats.forEach(function (p) {
+          if (!p) return;
+          p.chips += p.bet + p.committed;
+          p.bet = 0; p.committed = 0; p.folded = false; p.allIn = false; p.acted = false;
+        });
+        st.hand.phase = 'idle';
+        st.hand.turnSeat = -1;
+        st.pots = [];
+        st.pendingAward = null;
+        noteLog(st, '— 這手作廢，籌碼退回 —');
+        return;
+      default: throw new Error('未知的後台動作');
+    }
+  }
+
+  var seat = Engine.seatOf(st, a.id);
+
+  switch (a.type) {
+    case 'join':
+      if (seat >= 0) return;
+      if (st.settings.joinMode === 'hostOnly') throw new Error('主辦鎖住了自由入座');
+      var r = rosterOf(a.id);
+      if (r && r.blocked) throw new Error('你被移出這桌了，找主辦');
+      var free = -1;
+      for (var j = 0; j < st.seats.length; j++) if (!st.seats[j]) { free = j; break; }
+      if (free < 0) throw new Error('位子滿了');
+      seatWithChips(st, a.id, String(a.name || a.id).slice(0, 12), free);
+      return;
+
+    case 'sitout':
+      if (seat < 0) throw new Error('你不在桌上');
+      E.setSitout(st, seat, !!a.value);
+      return;
+
+    case 'award':
+      if (seat < 0) throw new Error('你不在桌上');
+      E.award(st, a.potIndex, a.winners);
+      noteLog(st, '（由 ' + st.seats[seat].name + ' 判定）');
+      return;
+
+    case 'fold': case 'check': case 'call': case 'raise': case 'allin':
+      if (seat < 0) throw new Error('你不在桌上');
+      E.act(st, seat, a.type, a.amount);
+      return;
+
+    default: throw new Error('未知動作 ' + a.type);
+  }
+}
+
+function loopFlush() {
+  var st = JSON.parse(JSON.stringify(LOOP.ST));
+  LOOP.onState(st);
+  return TABLE.set({
+    status: st.status, settings: st.settings, seats: st.seats, hand: st.hand,
+    pots: st.pots || [], pendingAward: st.pendingAward || null, log: st.log || [],
+    leaseUid: uid, leaseOwner: LOOP.me, leaseAt: FV.serverTimestamp()
+  }, { merge: true });
+}
+
+/* 送動作到佇列 */
+function sendAct(type, extra, asAdmin) {
+  var a = { type: type, ts: FV.serverTimestamp() };
+  if (asAdmin) a.admin = true; else a.id = LOOP.me;
+  if (extra) for (var k in extra) a[k] = extra[k];
+  return TABLE.collection('actions').add(a);
+}
+
+/* ---------- 自動開下一手（由當下的主機負責） ---------- */
+function clearAutoNext() {
+  if (LOOP.autoTimer) { clearInterval(LOOP.autoTimer); LOOP.autoTimer = null; }
+  LOOP.autoLeft = 0;
+}
+
+function readyPlayers(st) {
+  var n = 0;
+  st.seats.forEach(function (p) { if (p && p.state === 'playing' && p.chips > 0) n++; });
+  return n;
+}
+
+function maybeAutoNext(onTick) {
+  var st = LOOP.ST;
+  if (!LOOP.own || !st) { clearAutoNext(); return; }
+  var on = st.settings.autoNext !== false;
+  if (!on || st.hand.phase !== 'idle' || st.pendingAward || readyPlayers(st) < 2) { clearAutoNext(); return; }
+  if (LOOP.autoTimer) return;
+
+  LOOP.autoLeft = st.settings.autoDelay || 6;
+  if (onTick) onTick(LOOP.autoLeft);
+  LOOP.autoTimer = setInterval(function () {
+    LOOP.autoLeft--;
+    if (LOOP.autoLeft > 0) { if (onTick) onTick(LOOP.autoLeft); return; }
+    clearAutoNext();
+    var s = LOOP.ST;
+    if (LOOP.own && s && s.hand.phase === 'idle' && readyPlayers(s) >= 2 && s.settings.autoNext !== false) {
+      LOOP.queue = LOOP.queue.then(function () {
+        try { Engine.startHand(s); } catch (e) { return; }
+        return loopFlush();
+      }).catch(function () {});
+    }
+    if (onTick) onTick(0);
+  }, 1000);
+}
+
+
 /* ================= 前台 ================= */
 var myId = null, ST = null, mySeat = -1, raiseOpen = false, unsubs = [];
 
@@ -1376,30 +1651,21 @@ function startTable() {
       if (s.exists && s.data().msg) { toast(s.data().msg, 'bad'); s.ref.delete().catch(function () {}); }
     }, function () {}));
 
+  loopInit(myId, false, function () { ST = LOOP.ST; render(); }, function () { render(); });
+
   unsubs.push(TABLE.onSnapshot(function (snap) {
-    if (!snap.exists) { toast('後台還沒開桌', 'bad'); return; }
+    if (!snap.exists) { toast('主辦還沒開桌', 'bad'); return; }
     var d = snap.data();
-    ST = {
-      status: d.status, settings: d.settings, seats: d.seats || [], hand: d.hand,
-      pots: d.pots || [], pendingAward: d.pendingAward || null, log: d.log || []
-    };
+    loopOnSnapshot(d);
+    ST = LOOP.ST;
     mySeat = Engine.seatOf(ST, myId);
-    checkAdminAlive(d);
     render();
+    maybeAutoNext(function () { renderActions(); });
   }, function (e) { toast('連線問題：' + e.code, 'bad'); }));
 }
 
-function checkAdminAlive(d) {
-  var hb = d.hostHeartbeat && d.hostHeartbeat.toMillis ? d.hostHeartbeat.toMillis() : 0;
-  var stale = Date.now() - hb > 20000;
-  $('banner').style.display = stale ? '' : 'none';
-  if (stale) $('banner').textContent = '後台離線了，等主辦把頁面打開';
-}
-
 function send(type, extra) {
-  var a = { id: myId, type: type, ts: FV.serverTimestamp() };
-  if (extra) for (var k in extra) a[k] = extra[k];
-  return TABLE.collection('actions').add(a)
+  return sendAct(type, extra, false)
     .catch(function (e) { toast('送不出去：' + e.code, 'bad'); });
 }
 
@@ -1552,15 +1818,17 @@ function renderActions() {
     row.innerHTML = '<div class="waiting">你出局了，等主辦補碼</div>';
     return;
   }
-  if (ST.hand.phase === 'showdown') {
+  if (ST.hand.phase === 'showdown' && ST.pendingAward) {
     box.classList.remove('on');
-    row.innerHTML = '<div class="waiting">攤牌中，等主辦判定贏家</div>';
+    renderAwardUI(row);
     return;
   }
   if (ST.hand.turnSeat !== mySeat) {
     box.classList.remove('on');
     raiseOpen = false;
-    var msg = ST.hand.phase === 'idle' ? '等主辦開下一手' : '等別人動作';
+    var msg = ST.hand.phase === 'idle'
+      ? (LOOP.autoLeft > 0 ? LOOP.autoLeft + ' 秒後開下一手' : '等下一手開始')
+      : '等別人動作';
     if (me.state === 'waiting') msg = '下一手才輪到你';
     if (me.state === 'sitout') msg = '你目前暫離中';
     row.innerHTML = '<div class="waiting">' + msg + '</div>';
@@ -1587,6 +1855,46 @@ function renderActions() {
   });
 
   if (raiseOpen) setupRaise(L); else box.classList.remove('on');
+}
+
+var awardPick = {};
+function renderAwardUI(row) {
+  var pa = ST.pendingAward, h = '<div class="showdown">';
+  var pending = -1;
+  for (var i = 0; i < pa.pots.length; i++) if (!pa.resolved[i]) { pending = i; break; }
+
+  if (pending < 0) { row.innerHTML = '<div class="waiting">結算中…</div>'; return; }
+
+  var pot = pa.pots[pending];
+  h += '<div class="sd-h">' + (pending === 0 ? '主池' : '邊池 ' + pending) +
+       ' <b>' + fmt(pot.amount) + '</b>　誰贏了？</div>';
+  h += '<div class="winner-pick">';
+  pot.eligible.forEach(function (sIdx) {
+    var on = (awardPick[pending] || []).indexOf(sIdx) >= 0;
+    h += '<button class="' + (on ? 'on' : '') + '" data-w="' + sIdx + '">' +
+         esc(ST.seats[sIdx] ? ST.seats[sIdx].name : '?') + '</button>';
+  });
+  h += '</div>';
+  h += '<button class="btn" style="margin-top:9px" id="doAward">確認</button>';
+  h += '<p class="hint" style="margin-top:8px">平手就把贏的人都點起來，會自動平分。</p>';
+  h += '</div>';
+  row.innerHTML = h;
+
+  Array.prototype.slice.call(row.querySelectorAll('[data-w]')).forEach(function (b) {
+    b.onclick = function () {
+      var sIdx = +b.getAttribute('data-w');
+      awardPick[pending] = awardPick[pending] || [];
+      var k = awardPick[pending].indexOf(sIdx);
+      if (k >= 0) awardPick[pending].splice(k, 1); else awardPick[pending].push(sIdx);
+      renderAwardUI(row);
+    };
+  });
+  $('doAward').onclick = function () {
+    var w = awardPick[pending] || [];
+    if (!w.length) return toast('先點贏家', 'bad');
+    awardPick = {};
+    send('award', { potIndex: pending, winners: w });
+  };
 }
 
 function setupRaise(L) {
