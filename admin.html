@@ -443,6 +443,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
   <div class="panel">
     <h2>名單</h2>
     <div id="playerList"></div>
+    <div id="benchList"></div>
     <div class="row" style="margin-top:14px">
       <div class="field"><label>編號</label><input id="newId" maxlength="2" inputmode="numeric" placeholder="07"></div>
       <div class="field"><label>名字</label><input id="newName" maxlength="12" placeholder="阿明"></div>
@@ -467,6 +468,13 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
       <option value="postBB">補大盲，立刻可以玩</option>
       <option value="waitBB">等 button 繞過你</option>
     </select></div>
+    <div class="row">
+      <div class="field"><label>一手打完</label><select id="setAuto">
+        <option value="1">自動開下一手</option>
+        <option value="0">停下來等我按</option>
+      </select></div>
+      <div class="field"><label>間隔秒數</label><input id="setDelay" type="number" min="2" max="60"></div>
+    </div>
     <button class="btn ghost" id="saveSettings">儲存設定</button>
     <p class="hint" style="margin-top:10px">座位數改小的話，超過範圍的人要先移除。</p>
   </div>
@@ -502,6 +510,8 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
       startingChips: 5000,
       joinMode: 'anyone',      // anyone | hostOnly
       lateEntry: 'postBB',     // postBB | waitBB
+      autoNext: true,          // 一手結束後自動開下一手
+      autoDelay: 6,            // 幾秒後開
       disconnectSec: 30
     };
   };
@@ -1243,6 +1253,7 @@ function turnAlert(isMine) {
 
 /* ================= 後台 ================= */
 var ST = null, queue = Promise.resolve(), seen = {}, beatTimer = null, awardPick = {};
+var rosterAll = [], autoTimer = null, autoLeft = 0;
 
 /* ---------- 登入 / 初始化 ---------- */
 var ADMIN_DOC = db.collection('config').doc('admin');
@@ -1328,6 +1339,7 @@ function startHostLoop() {
 
     beat();
     beatTimer = setInterval(beat, 5000);
+    loadRoster();
 
     TABLE.collection('actions').orderBy('ts', 'asc').onSnapshot(function (snap) {
       snap.docChanges().forEach(function (ch) {
@@ -1340,6 +1352,15 @@ function startHostLoop() {
       });
     }, function (e) { console.warn(e); });
   });
+}
+
+function loadRoster() {
+  return db.collection('roster').get().then(function (q) {
+    rosterAll = [];
+    q.forEach(function (d) { rosterAll.push({ id: d.id, name: d.data().name || d.id, chips: d.data().chips }); });
+    rosterAll.sort(function (a, b) { return a.id < b.id ? -1 : 1; });
+    if (ST) renderPlayers();
+  }).catch(function () {});
 }
 
 function normalize(d) {
@@ -1402,6 +1423,34 @@ function flush() {
 }
 
 /* ---------- 畫面 ---------- */
+function readyCount() {
+  var n = 0;
+  ST.seats.forEach(function (p) { if (p && p.state === 'playing' && p.chips > 0) n++; });
+  return n;
+}
+
+function clearAuto() {
+  if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+  autoLeft = 0;
+}
+
+function maybeAutoNext() {
+  if (!ST) return;
+  var on = ST.settings.autoNext !== false;
+  if (!on || ST.hand.phase !== 'idle' || ST.pendingAward || readyCount() < 2) { clearAuto(); return; }
+  if (autoTimer) return;
+  autoLeft = ST.settings.autoDelay || 6;
+  renderHandPanel();
+  autoTimer = setInterval(function () {
+    autoLeft--;
+    if (autoLeft > 0) { renderHandPanel(); return; }
+    clearAuto();
+    if (ST && ST.hand.phase === 'idle' && readyCount() >= 2 && ST.settings.autoNext !== false) {
+      hostOp(function (st, E) { E.startHand(st); }).catch(function () {});
+    }
+  }, 1000);
+}
+
 function render() {
   if (!ST) return;
   renderTotals();
@@ -1410,6 +1459,7 @@ function render() {
   renderSettings();
   $('adminLog').innerHTML = (ST.log || []).slice().reverse()
     .map(function (l) { return esc(l.text); }).join('<br>');
+  maybeAutoNext();
 }
 
 function renderTotals() {
@@ -1451,19 +1501,29 @@ function renderHandPanel() {
         h += '<option value="' + i + '">' + (i + 1) + ' 號 · ' + esc(s.name) + '</option>';
       }
     });
-    h += '</select></div><button class="btn" id="startHand">開始下一手</button>';
+    h += '</select></div><button class="btn" id="startHand">' +
+         (autoLeft > 0 ? '立刻開始（' + autoLeft + ' 秒後自動開）' : '開始下一手') + '</button>';
+    if (autoLeft > 0) h += '<button class="btn ghost" id="cancelAuto" style="margin-top:9px">先不要自動開</button>';
   } else {
     h += '<h2>進行中</h2><p class="hint">第 ' + ST.hand.no + ' 手 · ' + Engine.phaseName(ST.hand.phase) +
          '　輪到 ' + (ST.hand.turnSeat >= 0 && ST.seats[ST.hand.turnSeat]
             ? esc(ST.seats[ST.hand.turnSeat].name) : '—') + '</p>';
     h += '<button class="btn danger" id="abortHand" style="margin-top:10px">作廢這手，籌碼退回</button>';
+    clearAuto();
   }
   el.innerHTML = h;
   bindHandPanel();
 }
 
 function bindHandPanel() {
+  if ($('cancelAuto')) $('cancelAuto').onclick = function () {
+    clearAuto();
+    hostOp(function (st) { st.settings.autoNext = false; })
+      .then(function () { toast('自動開牌關掉了，要開再按按鈕'); });
+  };
+
   if ($('startHand')) $('startHand').onclick = function () {
+    clearAuto();
     var fd = +$('forceDealer').value;
     hostOp(function (st, E) { E.startHand(st, fd >= 0 ? fd : undefined); })
       .catch(function (e) { toast(e.message, 'bad'); });
@@ -1525,6 +1585,21 @@ function renderPlayers() {
   if (!h) h = '<p class="hint">還沒有人。用下面的欄位登記。</p>';
   $('playerList').innerHTML = h;
 
+  var seatedIds = [];
+  ST.seats.forEach(function (p) { if (p) seatedIds.push(String(p.uid)); });
+  var bench = rosterAll.filter(function (r) { return seatedIds.indexOf(r.id) < 0; });
+  var bh = '';
+  if (bench.length) {
+    bh = '<div class="sec" style="margin:18px 0 6px">不在桌上</div>';
+    bench.forEach(function (r) {
+      bh += '<div class="prow out"><span class="id">' + esc(r.id) + '</span>' +
+        '<span class="who"><b>' + esc(r.name) + '</b><small>' +
+        (r.chips != null ? '離桌時剩 ' + fmt(r.chips) : '還沒上過桌') + '</small></span>' +
+        '<button data-back="' + esc(r.id) + '">拉回桌</button></div>';
+    });
+  }
+  $('benchList').innerHTML = bh;
+
   var sel = $('newSeat'), opts = '';
   ST.seats.forEach(function (s, i) { if (!s) opts += '<option value="' + i + '">' + (i + 1) + ' 號</option>'; });
   sel.innerHTML = opts || '<option value="-1">沒有空位</option>';
@@ -1559,6 +1634,30 @@ function bindPlayers() {
     };
   });
 
+  Array.prototype.slice.call(document.querySelectorAll('[data-back]')).forEach(function (b) {
+    b.onclick = function () {
+      var id = b.getAttribute('data-back');
+      var r = rosterAll.filter(function (x) { return x.id === id; })[0];
+      if (!r) return;
+      var free = [];
+      ST.seats.forEach(function (p, i) { if (!p) free.push(i + 1); });
+      if (!free.length) return toast('沒有空位了', 'bad');
+      var v = prompt(r.name + ' 要坐幾號位？空位：' + free.join('、'), free[0]);
+      if (!v) return;
+      var seat = Math.round(+v) - 1;
+      if (free.indexOf(seat + 1) < 0) return toast('那個位子不能坐', 'bad');
+      hostOp(function (st, E) {
+        E.sit(st, id, r.name, seat);
+        if (r.chips != null) st.seats[seat].chips = r.chips;
+        if (st.seats[seat].chips <= 0) st.seats[seat].state = 'sitout';
+      }).then(function () {
+        return db.collection('roster').doc(id).update({ chips: FV.delete() }).catch(function () {});
+      }).then(loadRoster)
+        .then(function () { toast(r.name + ' 回到 ' + (seat + 1) + ' 號位'); })
+        .catch(function (e) { toast(e.message, 'bad'); });
+    };
+  });
+
   Array.prototype.slice.call(el.querySelectorAll('[data-pw]')).forEach(function (b) {
     b.onclick = function () {
       var i = +b.getAttribute('data-pw'), p = ST.seats[i];
@@ -1586,8 +1685,11 @@ function bindPlayers() {
     b.onclick = function () {
       var i = +b.getAttribute('data-del');
       var p = ST.seats[i];
-      if (!confirm('把 ' + p.name + '（編號 ' + p.uid + '）移出牌桌？\n\n登記名單會保留，密碼也還在。')) return;
-      hostOp(function (st, E) { E.leave(st, i); })
+      if (!confirm('把 ' + p.name + '（編號 ' + p.uid + '）移出牌桌？\n\n籌碼會記在名單裡，之後可以原數拉回來。')) return;
+      var keep = p.chips, pid = String(p.uid);
+      db.collection('roster').doc(pid).update({ chips: keep }).catch(function () {})
+        .then(function () { return hostOp(function (st, E) { E.leave(st, i); }); })
+        .then(loadRoster)
         .catch(function (e) { toast(e.message, 'bad'); });
     };
   });
@@ -1607,6 +1709,7 @@ $('addPlayer').addEventListener('click', function () {
     return hostOp(function (st, E) { E.sit(st, id, name, seat); });
   }).then(function () {
     $('newId').value = ''; $('newName').value = '';
+    loadRoster();
     toast(name + ' 登記完成，坐 ' + (seat + 1) + ' 號位');
   }).catch(function (e) { toast(e.message || '登記失敗', 'bad'); });
 });
@@ -1619,6 +1722,8 @@ function renderSettings() {
   $('setStack').value = ST.settings.startingChips;
   $('setSeats').value = ST.settings.seatCount;
   $('setLate').value = ST.settings.lateEntry;
+  $('setAuto').value = ST.settings.autoNext === false ? '0' : '1';
+  $('setDelay').value = ST.settings.autoDelay || 6;
 }
 
 $('saveSettings').addEventListener('click', function () {
@@ -1627,6 +1732,8 @@ $('saveSettings').addEventListener('click', function () {
   var stack = Math.max(bb, +$('setStack').value);
   var seatCount = +$('setSeats').value;
   var late = $('setLate').value;
+  var autoNext = $('setAuto').value === '1';
+  var autoDelay = Math.max(2, Math.min(60, +$('setDelay').value || 6));
 
   for (var i = seatCount; i < ST.seats.length; i++) {
     if (ST.seats[i]) return toast('第 ' + (i + 1) + ' 號位還有人，先移除', 'bad');
@@ -1634,6 +1741,7 @@ $('saveSettings').addEventListener('click', function () {
   hostOp(function (st) {
     st.settings.sb = sb; st.settings.bb = bb;
     st.settings.startingChips = stack; st.settings.lateEntry = late;
+    st.settings.autoNext = autoNext; st.settings.autoDelay = autoDelay;
     if (seatCount !== st.seats.length) {
       var seats = st.seats.slice(0, seatCount);
       while (seats.length < seatCount) seats.push(null);
