@@ -490,6 +490,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
   <div class="topbar">
     <span class="chip-icon"></span>
     <span class="code" id="whoami">--</span>
+    <span class="build" id="topBuild"></span>
     <span class="spacer"></span>
     <button class="iconbtn" id="drawerBtn">☰</button>
   </div>
@@ -1135,7 +1136,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 <script>
 (function(){
 'use strict';
-var BUILD = '0910-1902';
+var BUILD = '0911-0437';
 /* ================= Firebase ================= */
 var FB_CONFIG = {
   apiKey: "AIzaSyC1ypnHgPuhjoe6u7D-opVzQSZEgv9q34k",
@@ -1608,8 +1609,17 @@ function admUnlock(pw, pw2) {
       .then(function () { return ADMIN_DOC.set({ uid: uid, at: FV.serverTimestamp() }); });
   } else {
     step = claim.set({ pw: pw, at: FV.serverTimestamp() })
-      .catch(function () { throw new Error('密碼不對'); })
-      .then(function () { return ADMIN_DOC.update({ uid: uid, at: FV.serverTimestamp() }); });
+      .catch(function () {
+        // 密碼文件可能根本不存在（舊版留下的殘骸），補建一次再試
+        return ADMIN_PW.set({ pw: pw })
+          .then(function () { return claim.set({ pw: pw, at: FV.serverTimestamp() }); })
+          .catch(function () { throw new Error('密碼不對'); });
+      })
+      .then(function () { return ADMIN_DOC.update({ uid: uid, at: FV.serverTimestamp() }); })
+      .catch(function (e) {
+        if (e && e.message === '密碼不對') throw e;
+        throw new Error('換不了主辦身分：' + (e.code || e.message));
+      });
   }
   return step.then(function () {
     ADM.unlocked = true;
@@ -1976,7 +1986,7 @@ $('loginBtn').addEventListener('click', function () {
     btn.disabled = false;
     if (e && e.code === 'bad-pw') toast('密碼不對', 'bad');
     else if (e && e.code === 'gone') toast('這個編號不見了，重新整理看看', 'bad');
-    else toast('進不去，這個編號可能剛被別人註冊走了', 'bad');
+    else toast('進不去：' + (e && (e.code || e.message) ? (e.code || e.message) : '不明錯誤'), 'bad');
   });
 });
 
@@ -1988,6 +1998,7 @@ function startTable() {
   $('gateView').style.display = 'none';
   $('tableView').style.display = '';
   $('whoami').textContent = '編號 ' + myId;
+  $('topBuild').textContent = BUILD;
 
   unsubs.push(db.collection('tables').doc('main').collection('errors').doc(myId)
     .onSnapshot(function (s) {
@@ -1997,7 +2008,7 @@ function startTable() {
   loopInit(myId, ADM.unlocked, function () { ST = LOOP.ST; render(); }, function () { render(); });
 
   unsubs.push(TABLE.onSnapshot(function (snap) {
-    if (!snap.exists) { toast('主辦還沒開桌', 'bad'); return; }
+    if (!snap.exists) { ensureTableExists(); return; }
     var d = snap.data();
     loopOnSnapshot(d);
     ST = LOOP.ST;
@@ -2005,6 +2016,21 @@ function startTable() {
     render();
     maybeAutoNext(function () { renderActions(); });
   }, function (e) { toast('連線問題：' + e.code, 'bad'); }));
+}
+
+var _creating = false;
+function ensureTableExists() {
+  if (_creating) return;
+  _creating = true;
+  var st = Engine.newRoom(Engine.defaultSettings());
+  st.settings.startingChips = 1500;
+  TABLE.set({
+    status: st.status, settings: st.settings, seats: st.seats, hand: st.hand,
+    pots: [], pendingAward: null, log: [],
+    leaseUid: uid, leaseOwner: myId, leaseAt: FV.serverTimestamp()
+  }).then(function () { toast('牌桌開好了'); })
+    .catch(function (e) { toast('開不了牌桌：' + (e.code || e.message), 'bad'); })
+    .then(function () { _creating = false; });
 }
 
 function send(type, extra) {
@@ -2259,9 +2285,21 @@ $('drawerBtn').addEventListener('click', function () { $('drawer').classList.add
 $('drawer').addEventListener('click', function (e) { if (e.target === $('drawer')) $('drawer').classList.remove('on'); });
 
 function renderDrawer() {
-  if (!ST) return;
-  var h = '<h3>牌桌</h3><p class="hint">你是編號 ' + myId +
+  var h = '<h3>牌桌</h3><p class="hint">編號 ' + myId +
           '　<span class="build">版本 ' + BUILD + '</span></p>';
+
+  if (!ST) {
+    h += '<div class="sec">狀態</div>';
+    h += '<p class="hint">牌桌還沒載入。如果一直停在這裡，代表 Firestore 讀不到 tables/main，' +
+         '可能是規則沒更新。</p>';
+    h += '<button class="btn" style="margin-top:10px" id="mkTable">建立牌桌</button>';
+    h += admHTML();
+    $('drawerInner').innerHTML = h;
+    if ($('mkTable')) $('mkTable').onclick = function () { ensureTableExists(); };
+    admBind();
+    return;
+  }
+
   h += '<div class="sec">盲注</div><p class="hint">小盲 ' + fmt(ST.settings.sb) + '　大盲 ' + fmt(ST.settings.bb) + '</p>';
   h += '<div class="sec">紀錄</div><div class="logbox">' +
        (ST.log || []).slice().reverse().map(function (l) { return esc(l.text); }).join('<br>') + '</div>';
