@@ -56,7 +56,6 @@ input,select{font-family:var(--ui);font-size:16px;font-weight:600}
   position:relative;padding:22px;margin-bottom:16px;border-radius:4px;
   background:linear-gradient(160deg,var(--glass),var(--glass-2));
   border:1px solid var(--edge);
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   box-shadow:0 0 0 1px rgba(63,199,255,.05),0 18px 50px rgba(0,0,0,.55),
              inset 0 1px 0 rgba(168,238,255,.12);
 }
@@ -160,9 +159,8 @@ input,select{font-family:var(--ui);font-size:16px;font-weight:600}
 .mybar{display:flex;gap:6px;padding:10px 10px 2px;flex:none}
 .mybar .box{
   flex:1;min-width:0;text-align:center;padding:7px 2px;border-radius:3px;
-  background:linear-gradient(160deg,var(--glass),var(--glass-2));
+  background:linear-gradient(160deg,#0d1c30,#08111f);
   border:1px solid var(--edge);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
 .mybar .k{font-size:9.5px;white-space:nowrap;color:var(--fg-faint);letter-spacing:.14em;font-weight:500}
 .mybar .v{
@@ -216,9 +214,8 @@ input,select{font-family:var(--ui);font-size:16px;font-weight:600}
 .seat .card{padding:7px 4px}
 .seat .card{
   position:relative;padding:9px 6px;border-radius:3px;
-  background:linear-gradient(160deg,rgba(14,30,52,.9),rgba(8,16,30,.9));
+  background:linear-gradient(160deg,#0e1e34,#070f1c);
   border:1px solid var(--edge);
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   box-shadow:inset 0 1px 0 rgba(168,238,255,.1);
   transition:transform .22s,box-shadow .22s,border-color .22s;
 }
@@ -294,14 +291,16 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 .waiting{text-align:center;color:var(--fg-faint);padding:18px 0;font-size:13px;letter-spacing:.1em}
 
 /* 抽屜 */
-.drawer{position:fixed;inset:0;z-index:60;background:rgba(2,4,10,.74);display:none;backdrop-filter:blur(6px)}
+.drawer{position:fixed;inset:0;z-index:60;background:rgba(2,4,10,.82);display:none}
 .drawer.on{display:block;animation:fade .2s}
 @keyframes fade{from{opacity:0}}
 .drawer-inner{
   position:absolute;right:0;top:0;bottom:0;width:min(410px,93vw);padding:22px;overflow-y:auto;
   background:linear-gradient(200deg,rgba(11,24,42,.97),rgba(5,9,18,.99));
   border-left:1px solid var(--edge);
-  animation:slideIn .24s cubic-bezier(.2,.9,.3,1);
+  animation:slideIn .2s cubic-bezier(.2,.9,.3,1);
+  will-change:transform;
+  -webkit-overflow-scrolling:touch;
 }
 @keyframes slideIn{from{transform:translateX(100%)}}
 .drawer h3{margin:0 0 4px;font-family:var(--dsp);font-weight:700;font-size:17px;letter-spacing:.06em}
@@ -389,9 +388,8 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 .totals{display:flex;gap:10px;margin-bottom:18px}
 .totals > div{
   flex:1;padding:14px 8px;text-align:center;border-radius:3px;
-  background:linear-gradient(160deg,var(--glass),var(--glass-2));
+  background:linear-gradient(160deg,#0d1c30,#08111f);
   border:1px solid var(--edge);
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
 }
 .totals > div > .k{font-size:11px;color:var(--fg-faint);letter-spacing:.16em;font-weight:500}
 .totals > div > .v{
@@ -422,26 +420,48 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 .diagline.hot{color:var(--gold)}
 .diagline.hot b{color:var(--gold)}
 
-/* ---- 公共牌位 ---- */
-.board{display:flex;justify-content:center;gap:5px;margin-bottom:10px}
-.board .c{
-  width:clamp(21px,6.4vw,30px);height:clamp(30px,9vw,42px);border-radius:4px;
-  border:1px dashed rgba(88,190,255,.3);
-  background:rgba(4,10,20,.4);
+/* ---- 牌 ---- */
+.board{display:flex;justify-content:center;gap:5px;margin-bottom:11px}
+.c{
+  width:clamp(26px,7.4vw,34px);height:clamp(36px,10.4vw,48px);border-radius:4px;
+  border:1px dashed rgba(88,190,255,.26);background:rgba(4,10,20,.35);
+  display:flex;align-items:center;justify-content:center;
 }
-.board .c.up{
-  border:1px solid rgba(168,238,255,.55);border-style:solid;
-  background:
-    linear-gradient(150deg,rgba(63,199,255,.22),rgba(12,26,46,.9) 55%),
-    repeating-linear-gradient(45deg,rgba(168,238,255,.07) 0 3px,transparent 3px 6px);
-  box-shadow:0 0 16px rgba(63,199,255,.28),inset 0 1px 0 rgba(168,238,255,.25);
-  animation:flip .34s cubic-bezier(.2,1.4,.4,1) backwards;
+.c.up{
+  border:1px solid rgba(220,238,248,.4);border-style:solid;
+  background:linear-gradient(165deg,#f2f7fb,#cfdce6);
+  box-shadow:0 2px 10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.9);
+  animation:flip .3s cubic-bezier(.2,1.4,.4,1) backwards;
 }
+.c.up span{
+  font-family:var(--ui);font-weight:700;color:#0b1622;
+  font-size:clamp(12px,3.6vw,16px);line-height:1;letter-spacing:-.02em;
+}
+.c.up.red span{color:#d3172f}
 @keyframes flip{
-  from{transform:rotateY(90deg) scale(.8);opacity:0}
+  from{transform:rotateY(90deg) scale(.82);opacity:0}
   to{transform:rotateY(0) scale(1);opacity:1}
 }
-@media (max-width:400px){ .board .c{width:26px;height:36px} }
+
+/* 自己的底牌 */
+.my-cards{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:8px 0 2px;flex:none;
+}
+.my-cards .lbl{
+  font-size:11px;color:var(--fg-faint);letter-spacing:.18em;margin-right:4px;
+}
+.my-cards .c{width:40px;height:56px}
+.my-cards .c.up span{font-size:19px}
+
+/* 座位上攤開的牌 */
+.seat .mini{display:flex;justify-content:center;gap:3px;margin-top:5px}
+.seat .mini .c{width:20px;height:27px;border-radius:3px}
+.seat .mini .c.up span{font-size:10px}
+.seat .hand-name{
+  font-size:10px;color:var(--grn);margin-top:3px;letter-spacing:.04em;
+  text-shadow:0 0 10px rgba(75,227,143,.5);
+}
 
 /* ---- 攤牌 ---- */
 .showdown{text-align:center;padding:4px 0 2px}
@@ -514,6 +534,8 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
     <div class="banner" id="banner" style="display:none"></div>
   </div>
 
+  <div class="my-cards" id="myCards"></div>
+
   <div class="actions" id="actions">
     <div class="raise-box" id="raiseBox">
       <div class="raise-top">
@@ -542,6 +564,136 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
+/* cards.js — 牌組、洗牌、七張選五的牌型比大小。純函式，可單獨測試。
+   一張牌用 0..51 的整數表示：rank * 4 + suit
+   rank 0..12 對應 2,3,4,...,K,A　suit 0..3 對應 ♠♥♦♣ */
+(function (g) {
+  'use strict';
+  var C = {};
+
+  var RANK_TXT = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+  var SUIT_TXT = ['♠', '♥', '♦', '♣'];
+
+  C.rankOf = function (c) { return (c / 4) | 0; };
+  C.suitOf = function (c) { return c % 4; };
+  C.text = function (c) { return RANK_TXT[C.rankOf(c)] + SUIT_TXT[C.suitOf(c)]; };
+  C.isRed = function (c) { var s = C.suitOf(c); return s === 1 || s === 2; };
+
+  C.newDeck = function () {
+    var d = [];
+    for (var i = 0; i < 52; i++) d.push(i);
+    return d;
+  };
+
+  /* Fisher-Yates，優先用加密級亂數 */
+  C.shuffle = function (deck) {
+    var d = deck.slice(), i, j, t;
+    var rnd = function (n) {
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        var a = new Uint32Array(1);
+        // 去掉模數偏差
+        var limit = Math.floor(4294967296 / n) * n;
+        do { crypto.getRandomValues(a); } while (a[0] >= limit);
+        return a[0] % n;
+      }
+      return Math.floor(Math.random() * n);
+    };
+    for (i = d.length - 1; i > 0; i--) {
+      j = rnd(i + 1);
+      t = d[i]; d[i] = d[j]; d[j] = t;
+    }
+    return d;
+  };
+
+  var CAT_TXT = ['高牌', '一對', '兩對', '三條', '順子', '同花', '葫蘆', '四條', '同花順'];
+
+  /* 五張牌評分。回傳一個整數，越大越好 */
+  function eval5(cs) {
+    var ranks = [], suits = [], i;
+    for (i = 0; i < 5; i++) { ranks.push(C.rankOf(cs[i])); suits.push(C.suitOf(cs[i])); }
+
+    var flush = suits[0] === suits[1] && suits[1] === suits[2] &&
+                suits[2] === suits[3] && suits[3] === suits[4];
+
+    var count = {};
+    ranks.forEach(function (r) { count[r] = (count[r] || 0) + 1; });
+
+    // 依「出現次數」再依「點數」排序
+    var groups = Object.keys(count).map(function (r) {
+      return { r: +r, n: count[r] };
+    }).sort(function (a, b) { return b.n - a.n || b.r - a.r; });
+
+    var sorted = ranks.slice().sort(function (a, b) { return b - a; });
+
+    var straight = false, high = sorted[0];
+    if (groups.length === 5) {
+      if (sorted[0] - sorted[4] === 4) straight = true;
+      // A-5 的順子，A 當 1
+      else if (sorted[0] === 12 && sorted[1] === 3 && sorted[2] === 2 &&
+               sorted[3] === 1 && sorted[4] === 0) { straight = true; high = 3; }
+    }
+
+    var cat, tie;
+    if (straight && flush) { cat = 8; tie = [high]; }
+    else if (groups[0].n === 4) { cat = 7; tie = [groups[0].r, groups[1].r]; }
+    else if (groups[0].n === 3 && groups[1].n === 2) { cat = 6; tie = [groups[0].r, groups[1].r]; }
+    else if (flush) { cat = 5; tie = sorted; }
+    else if (straight) { cat = 4; tie = [high]; }
+    else if (groups[0].n === 3) { cat = 3; tie = [groups[0].r, groups[1].r, groups[2].r]; }
+    else if (groups[0].n === 2 && groups[1].n === 2) { cat = 2; tie = [groups[0].r, groups[1].r, groups[2].r]; }
+    else if (groups[0].n === 2) { cat = 1; tie = [groups[0].r, groups[1].r, groups[2].r, groups[3].r]; }
+    else { cat = 0; tie = sorted; }
+
+    // 每一位用 15 進位，踢腳最大 13 不會溢位污染上一位
+    var score = cat;
+    for (i = 0; i < 5; i++) score = score * 15 + (tie[i] === undefined ? 0 : tie[i] + 1);
+    return score;
+  }
+
+  var COMBOS = (function () {
+    var out = [];
+    for (var a = 0; a < 7; a++)
+      for (var b = a + 1; b < 7; b++)
+        for (var c = b + 1; c < 7; c++)
+          for (var d = c + 1; d < 7; d++)
+            for (var e = d + 1; e < 7; e++) out.push([a, b, c, d, e]);
+    return out;   // 21 組
+  })();
+
+  /* 七張裡挑最好的五張。回傳 { score, cards, name } */
+  C.best = function (seven) {
+    var bestScore = -1, bestCards = null, i, k, pick;
+    for (i = 0; i < COMBOS.length; i++) {
+      pick = [];
+      for (k = 0; k < 5; k++) pick.push(seven[COMBOS[i][k]]);
+      var sc = eval5(pick);
+      if (sc > bestScore) { bestScore = sc; bestCards = pick.slice(); }
+    }
+    return { score: bestScore, cards: bestCards, name: C.nameOf(bestScore, bestCards) };
+  };
+
+  C.nameOf = function (score, cards) {
+    var cat = Math.floor(score / Math.pow(15, 5));
+    if (cat === 8) {
+      var rs = cards.map(C.rankOf).sort(function (a, b) { return b - a; });
+      if (rs[0] === 12 && rs[4] === 8) return '皇家同花順';
+      return '同花順';
+    }
+    var txt = CAT_TXT[cat];
+    if (cat === 7 || cat === 3 || cat === 1) {
+      var cnt = {};
+      cards.forEach(function (c) { var r = C.rankOf(c); cnt[r] = (cnt[r] || 0) + 1; });
+      var need = cat === 7 ? 4 : (cat === 3 ? 3 : 2);
+      for (var r in cnt) if (cnt[r] === need) return RANK_TXT[r] + ' ' + txt;
+    }
+    return txt;
+  };
+
+  C.compare = function (a, b) { return a - b; };
+
+  g.Cards = C;
+})(window);
+
 /* engine.js — 純籌碼引擎，不碰 Firebase。
    輸入 state + action，輸出新的 state。可以單獨測試。 */
 (function (g) {
@@ -770,6 +922,17 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
     st.pots = [];
     st.pendingAward = null;
     st.status = 'playing';
+    st.board = [];
+    st.reveal = null;
+
+    // 洗牌、每人發兩張
+    st.deck = Cards.shuffle(Cards.newDeck());
+    st.hole = {};
+    for (i = 0; i < n; i++) {
+      if (seatedPlaying(st.seats[i]) && st.seats[i].chips >= 0) {
+        st.hole[i] = [st.deck.pop(), st.deck.pop()];
+      }
+    }
 
     // 死錢（補大盲入場）
     for (i = 0; i < n; i++) {
@@ -948,8 +1111,12 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
       st.hand.phase = 'showdown';
       st.hand.turnSeat = -1;
       if (winner >= 0) {
-        st.pendingAward = { pots: st.pots, resolved: st.pots.map(function () { return null; }) };
-        for (var k = 0; k < st.pots.length; k++) E.award(st, k, [winner]);
+        var total = 0;
+        st.pots.forEach(function (p) { total += p.amount; });
+        st.seats[winner].chips += total;
+        log(st, st.seats[winner].name + ' 贏得 ' + fmtn(total) + '（其他人都蓋牌）');
+        st.reveal = null;
+        endHand(st);
       }
       return;
     }
@@ -970,11 +1137,19 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
     if (idx >= PHASES.length - 1) { toShowdown(st); return; }
 
     st.hand.phase = PHASES[idx + 1];
+    fillBoard(st, BOARD_AT[st.hand.phase]);
     var first = nextIdx(st.seats, st.hand.bbSeat, canAct);
     st.hand.turnSeat = countWhere(st.seats, canAct) >= 2 ? first : -1;
     log(st, '— ' + phaseName(st.hand.phase) + ' —');
     if (st.hand.turnSeat < 0) settleStreet(st);
   }
+
+  function fillBoard(st, n) {
+    st.board = st.board || [];
+    while (st.board.length < n && st.deck && st.deck.length) st.board.push(st.deck.pop());
+  }
+
+  var BOARD_AT = { preflop: 0, flop: 3, turn: 4, river: 5 };
 
   function maxCommitted(st) {
     var mx = 0;
@@ -993,9 +1168,39 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
   function toShowdown(st) {
     st.hand.phase = 'showdown';
     st.hand.turnSeat = -1;
+    fillBoard(st, 5);
     st.pots = E.buildPots(st.seats);
-    st.pendingAward = { pots: st.pots, resolved: st.pots.map(function () { return null; }) };
-    log(st, '— 攤牌，請房主選出贏家 —');
+
+    // 每個還沒蓋牌的人，七張裡挑最好的五張
+    var reveal = {}, i;
+    for (i = 0; i < st.seats.length; i++) {
+      if (!inHand(st.seats[i])) continue;
+      var hole = (st.hole && st.hole[i]) ? st.hole[i] : [];
+      var b = Cards.best(hole.concat(st.board));
+      reveal[i] = { hole: hole, best: b.cards, name: b.name, score: b.score };
+    }
+    st.reveal = reveal;
+    log(st, '— 攤牌 —');
+
+    // 每個池各自比，同分平分
+    st.pots.forEach(function (pot, pi) {
+      var elig = pot.eligible.filter(function (x) { return reveal[x]; });
+      if (!elig.length) return;
+      var top = -1;
+      elig.forEach(function (x) { if (reveal[x].score > top) top = reveal[x].score; });
+      var winners = elig.filter(function (x) { return reveal[x].score === top; });
+
+      var each = Math.floor(pot.amount / winners.length);
+      var rem = pot.amount - each * winners.length;
+      var ordered = orderFromDealer(st, winners);
+      ordered.forEach(function (seat, k) { st.seats[seat].chips += each + (k < rem ? 1 : 0); });
+
+      log(st, (pi === 0 ? '主池 ' : '邊池' + pi + ' ') + fmtn(pot.amount) + ' → ' +
+        ordered.map(function (x) { return st.seats[x].name; }).join('、') +
+        '（' + reveal[ordered[0]].name + '）');
+    });
+
+    endHand(st);
   }
 
   /* ---------- 邊池 ---------- */
@@ -1079,6 +1284,8 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
     st.pots = [];
     st.pendingAward = null;
     st.lastResults = results;
+    st.deck = [];
+    st.hole = {};   // 公牌和攤牌結果留到下一手開始前，讓大家看得到
   }
 
   /* ---------- 給 UI 用的輔助 ---------- */
@@ -1136,7 +1343,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 <script>
 (function(){
 'use strict';
-var BUILD = '0911-0447';
+var BUILD = '0911-1556';
 /* ================= Firebase ================= */
 var FB_CONFIG = {
   apiKey: "AIzaSyC1ypnHgPuhjoe6u7D-opVzQSZEgv9q34k",
@@ -1314,6 +1521,7 @@ var LOOP = {
   autoTimer: null,
   autoLeft: 0,
   roster: [],
+  dealtHand: -1,
   onState: function () {},
   onOwn: function () {}
 };
@@ -1344,9 +1552,14 @@ function loadLoopRoster() {
 function normalizeState(d) {
   return {
     status: d.status, settings: d.settings, seats: d.seats || [], hand: d.hand,
-    pots: d.pots || [], pendingAward: d.pendingAward || null, log: d.log || []
+    pots: d.pots || [], pendingAward: null, log: d.log || [],
+    board: d.board || [], reveal: d.reveal || null,
+    deck: [], hole: {}
   };
 }
+
+var SECRET = TABLE.collection('secret').doc('deck');
+var HOLE = TABLE.collection('hole');
 
 /* 每次牌桌快照都呼叫這個 */
 function loopOnSnapshot(d) {
@@ -1380,6 +1593,15 @@ function setOwn(v) {
   if (v) {
     window.__isHost = true;
     keepAwake();
+    // 接手主機時要把整副牌撈回來，不然這一手接不下去
+    SECRET.get().then(function (d) {
+      if (!d.exists || !LOOP.ST) return;
+      var x = d.data();
+      if (x.handNo === LOOP.ST.hand.no) {
+        LOOP.ST.deck = x.deck || [];
+        LOOP.ST.hole = x.hole || {};
+      }
+    }).catch(function () {});
     LOOP.renewTimer = setInterval(function () {
       TABLE.update({ leaseAt: FV.serverTimestamp() }).catch(function () {});
     }, 4000);
@@ -1511,11 +1733,31 @@ function applyAct(a) {
 function loopFlush() {
   var st = JSON.parse(JSON.stringify(LOOP.ST));
   LOOP.onState(st);
-  return TABLE.set({
+
+  var jobs = [TABLE.set({
     status: st.status, settings: st.settings, seats: st.seats, hand: st.hand,
-    pots: st.pots || [], pendingAward: st.pendingAward || null, log: st.log || [],
+    pots: st.pots || [], log: st.log || [],
+    board: st.board || [], reveal: st.reveal || null,
     leaseUid: uid, leaseOwner: LOOP.me, leaseAt: FV.serverTimestamp()
-  }, { merge: true });
+  }, { merge: true })];
+
+  // 整副牌只放在這裡，規則鎖成只有持租約的裝置讀得到
+  jobs.push(SECRET.set({
+    deck: st.deck || [], hole: st.hole || {}, handNo: st.hand.no
+  }).catch(function () {}));
+
+  // 新的一手才發底牌，一人一份，只有本人讀得到
+  if (st.hand.no !== LOOP.dealtHand && st.hand.phase !== 'idle') {
+    LOOP.dealtHand = st.hand.no;
+    st.seats.forEach(function (p, i) {
+      if (!p) return;
+      var cards = (st.hole && st.hole[i]) ? st.hole[i] : [];
+      jobs.push(HOLE.doc(String(p.uid)).set({ cards: cards, handNo: st.hand.no })
+        .catch(function () {}));
+    });
+  }
+
+  return Promise.all(jobs);
 }
 
 /* 送動作到佇列 */
@@ -1667,27 +1909,8 @@ function admHTML() {
   if (!ST) return '<div class="sec">主辦</div><p class="hint">牌桌還沒載入。</p>';
   var st = ST, h = '<div class="sec">主辦 · 牌局</div>';
 
-  if (st.pendingAward) {
-    st.pendingAward.pots.forEach(function (pot, i) {
-      var done = st.pendingAward.resolved[i];
-      h += '<div class="pot-award"><div class="h">' +
-        (i === 0 ? '主池' : '邊池 ' + i) + ' · ' + fmt(pot.amount) + '</div>';
-      if (done) {
-        h += '<div class="hint">已分給 ' + done.map(function (x) {
-          return esc(st.seats[x] ? st.seats[x].name : '?');
-        }).join('、') + '</div>';
-      } else {
-        h += '<div class="winner-pick">';
-        pot.eligible.forEach(function (x) {
-          var on = (ADM.awardPick[i] || []).indexOf(x) >= 0;
-          h += '<button class="' + (on ? 'on' : '') + '" data-aw="' + i + '" data-s="' + x + '">' +
-               esc(st.seats[x] ? st.seats[x].name : '?') + '</button>';
-        });
-        h += '</div><button class="btn" style="margin-top:10px" data-award="' + i + '">確認分池</button>';
-      }
-      h += '</div>';
-    });
-  } else if (st.hand.phase === 'idle') {
+  if (st.hand.phase === 'idle') {
+
     h += '<div class="field"><label>指定莊家位（第一手用）</label><select id="admDealer"><option value="-1">自動輪莊</option>';
     st.seats.forEach(function (p, i) {
       if (p && p.state === 'playing' && p.chips > 0) {
@@ -1818,25 +2041,6 @@ function admBind() {
 
   var root = $('drawerInner');
 
-  Array.prototype.slice.call(root.querySelectorAll('[data-aw]')).forEach(function (b) {
-    b.onclick = function () {
-      var pi = +b.getAttribute('data-aw'), s = +b.getAttribute('data-s');
-      ADM.awardPick[pi] = ADM.awardPick[pi] || [];
-      var k = ADM.awardPick[pi].indexOf(s);
-      if (k >= 0) ADM.awardPick[pi].splice(k, 1); else ADM.awardPick[pi].push(s);
-      renderDrawer();
-    };
-  });
-
-  Array.prototype.slice.call(root.querySelectorAll('[data-award]')).forEach(function (b) {
-    b.onclick = function () {
-      var pi = +b.getAttribute('data-award'), w = ADM.awardPick[pi] || [];
-      if (!w.length) return toast('先點贏家', 'bad');
-      admOp('award', { potIndex: pi, winners: w })
-        .then(function () { ADM.awardPick = {}; }).catch(function () {});
-    };
-  });
-
   Array.prototype.slice.call(root.querySelectorAll('[data-add]')).forEach(function (b) {
     b.onclick = function () {
       var i = +b.getAttribute('data-add');
@@ -1915,7 +2119,7 @@ function admBind() {
 var myId = null, ST = null, mySeat = -1, raiseOpen = false, unsubs = [];
 
 /* ---------- 註冊 / 登入 ---------- */
-var myName = '', isNew = false;
+var myName = '', isNew = false, myHole = [], myHoleHand = -1;
 
 $('pid').addEventListener('input', function () {
   var v = this.value.replace(/\D/g, '').slice(0, 2);
@@ -2000,6 +2204,12 @@ function startTable() {
   $('whoami').textContent = '編號 ' + myId;
   $('topBuild').textContent = BUILD;
 
+  unsubs.push(TABLE.collection('hole').doc(myId).onSnapshot(function (d) {
+    myHole = d.exists ? (d.data().cards || []) : [];
+    myHoleHand = d.exists ? d.data().handNo : -1;
+    render();
+  }, function () {}));
+
   unsubs.push(db.collection('tables').doc('main').collection('errors').doc(myId)
     .onSnapshot(function (s) {
       if (s.exists && s.data().msg) { toast(s.data().msg, 'bad'); s.ref.delete().catch(function () {}); }
@@ -2040,6 +2250,14 @@ function send(type, extra) {
 
 /* ---------- 畫面 ---------- */
 var _lastChips = null, _lastHandNo = 0;
+var _lastHTML = {};
+function paint(id, html) {
+  if (_lastHTML[id] === html) return false;
+  _lastHTML[id] = html;
+  $(id).innerHTML = html;
+  return true;
+}
+
 function render() {
   if (!ST) return;
   turnAlert(ST.hand.turnSeat >= 0 && ST.hand.turnSeat === mySeat);
@@ -2074,24 +2292,27 @@ function renderMyBar() {
 }
 
 var _shown = 0;
-function boardCount(phase) {
-  return { idle: 0, preflop: 0, flop: 3, turn: 4, river: 5, showdown: 5 }[phase] || 0;
+
+function cardHTML(c, extra) {
+  if (c === null || c === undefined) return '<div class="c"></div>';
+  return '<div class="c up' + (Cards.isRed(c) ? ' red' : '') + '"' + (extra || '') + '>' +
+         '<span>' + Cards.text(c) + '</span></div>';
 }
 
 function renderBoard() {
   var el = $('board');
   if (!el) return;
-  var n = boardCount(ST.hand.phase);
-  if (el.childElementCount === 5 && _shown === n) return;
+  var b = ST.board || [];
+  if (_shown === b.length && el.childElementCount === 5) return;
   var h = '';
   for (var i = 0; i < 5; i++) {
-    var up = i < n;
-    var fresh = up && i >= _shown;
-    h += '<div class="c' + (up ? ' up' : '') + '"' +
-         (fresh ? ' style="animation-delay:' + ((i - _shown) * 120) + 'ms"' : '') + '></div>';
+    var fresh = i < b.length && i >= _shown;
+    h += i < b.length
+      ? cardHTML(b[i], fresh ? ' style="animation-delay:' + ((i - _shown) * 110) + 'ms"' : '')
+      : '<div class="c"></div>';
   }
-  if (n > _shown && _shown >= 0 && ST.hand.phase !== 'idle') SFX.chip();
-  _shown = n;
+  if (b.length > _shown) SFX.chip();
+  _shown = b.length;
   el.innerHTML = h;
 }
 
@@ -2107,7 +2328,16 @@ function renderCenter() {
     : '';
 }
 
-function renderSeats() {
+function seatsKey() {
+  return JSON.stringify([ST.seats, ST.hand.turnSeat, ST.hand.sbSeat, ST.hand.bbSeat,
+                         ST.hand.phase, ST.reveal, mySeat, window.innerWidth, window.innerHeight]);
+}
+
+function renderSeats(force) {
+  var key = seatsKey();
+  if (!force && _lastHTML.__seats === key) return;
+  _lastHTML.__seats = key;
+
   var felt = $('felt');
   Array.prototype.slice.call(felt.querySelectorAll('.seat')).forEach(function (n) { n.remove(); });
 
@@ -2160,6 +2390,11 @@ function seatNode(i, x, y) {
     else if (p.folded) inner += '<div class="st">已蓋牌</div>';
   }
   inner += '</div>';
+  var rv = ST.reveal && ST.reveal[i];
+  if (rv) {
+    inner += '<div class="mini">' + rv.hole.map(function (c) { return cardHTML(c); }).join('') + '</div>';
+    inner += '<div class="hand-name">' + esc(rv.name) + '</div>';
+  }
   if (p && p.bet > 0) inner += '<div class="bet">' + fmt(p.bet) + '</div>';
   var tag = Engine.positionLabel(ST, i);
   if (tag) inner += '<div class="tag">' + tag + '</div>';
@@ -2168,7 +2403,18 @@ function seatNode(i, x, y) {
 }
 
 /* ---------- 動作列 ---------- */
+function renderMyCards() {
+  var el = $('myCards');
+  if (!el) return;
+  var live = myHole.length === 2 && ST && myHoleHand === ST.hand.no && ST.hand.phase !== 'idle';
+  el.innerHTML = live
+    ? '<span class="lbl">你的牌</span>' + myHole.map(function (c) { return cardHTML(c); }).join('')
+    : '';
+  el.style.display = live ? '' : 'none';
+}
+
 function renderActions() {
+  renderMyCards();
   var row = $('actRow'), box = $('raiseBox');
 
   if (mySeat < 0) {
@@ -2187,11 +2433,7 @@ function renderActions() {
     row.innerHTML = '<div class="waiting">你出局了，等主辦補碼</div>';
     return;
   }
-  if (ST.hand.phase === 'showdown' && ST.pendingAward) {
-    box.classList.remove('on');
-    renderShowdown(row);
-    return;
-  }
+
   if (ST.hand.turnSeat !== mySeat) {
     box.classList.remove('on');
     raiseOpen = false;
@@ -2212,7 +2454,10 @@ function renderActions() {
     html += '<button class="btn" data-a="raiseOpen">' + (ST.hand.currentBet === 0 ? '下注' : '加注') + '</button>';
   }
   html += '</div>';
-  row.innerHTML = html;
+  if (!paint('actRow', html)) {
+    if (raiseOpen) setupRaise(L);
+    return;
+  }
 
   Array.prototype.slice.call(row.querySelectorAll('[data-a]')).forEach(function (b) {
     b.addEventListener('click', function () {
@@ -2224,22 +2469,6 @@ function renderActions() {
   });
 
   if (raiseOpen) setupRaise(L); else box.classList.remove('on');
-}
-
-function renderShowdown(row) {
-  var pa = ST.pendingAward;
-  var h = '<div class="showdown"><div class="sd-h">攤牌，等主辦結算</div>';
-  pa.pots.forEach(function (pot, i) {
-    var done = pa.resolved[i];
-    h += '<div class="sd-pot' + (done ? ' done' : '') + '">' +
-      (i === 0 ? '主池' : '邊池 ' + i) + ' <b>' + fmt(pot.amount) + '</b>　' +
-      (done
-        ? '→ ' + done.map(function (x) { return esc(ST.seats[x] ? ST.seats[x].name : '?'); }).join('、')
-        : pot.eligible.map(function (x) { return esc(ST.seats[x] ? ST.seats[x].name : '?'); }).join(' / ')) +
-      '</div>';
-  });
-  h += '</div>';
-  row.innerHTML = h;
 }
 
 function setupRaise(L) {
@@ -2304,7 +2533,7 @@ function renderDrawer() {
          '可能是規則沒更新。</p>';
     h += '<button class="btn" style="margin-top:10px" id="mkTable">建立牌桌</button>';
     h += admHTML();
-    $('drawerInner').innerHTML = h;
+    if (!paint('drawerInner', h)) return;
     if ($('mkTable')) $('mkTable').onclick = function () { ensureTableExists(); };
     admBind();
     return;
@@ -2324,7 +2553,7 @@ function renderDrawer() {
        (FX.muted ? '音效與震動：關' : '音效與震動：開') + '</button>';
   h += '<button class="btn danger" style="margin-top:8px" id="logout">登出</button>';
   h += admHTML();
-  $('drawerInner').innerHTML = h;
+  if (!paint('drawerInner', h)) return;
   admBind();
 
   if ($('toggleSitout')) $('toggleSitout').onclick = function () {
@@ -2342,7 +2571,7 @@ function renderDrawer() {
   };
 }
 
-window.addEventListener('resize', function () { if (ST) renderSeats(); });
+window.addEventListener('resize', function () { if (ST) renderSeats(true); });
 
 /* ================= 啟動 ================= */
 $('loginBtn').disabled = true;
