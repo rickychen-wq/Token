@@ -287,11 +287,12 @@ input[type=range]{width:100%;accent-color:var(--cy);height:24px}
 .act-row .btn{padding:16px 4px;font-size:clamp(11px,3.4vw,13px);letter-spacing:.06em}
 .waiting{text-align:center;color:var(--fg-faint);padding:12px 0;font-size:12.5px;letter-spacing:.08em}
 .waiting + .btn{margin-top:2px}
-.leave-link{
-  display:block;width:100%;margin-top:9px;padding:6px 0;
-  font-size:12px;color:var(--fg-faint);letter-spacing:.06em;text-align:center;
+.mini-leave{
+  padding:5px 11px;border-radius:20px;font-size:11.5px;letter-spacing:.06em;
+  color:var(--fg-dim);border:1px solid rgba(88,190,255,.22);background:rgba(63,199,255,.05);
 }
-.leave-link:active{color:var(--cy-hi)}
+.mini-leave:active{background:rgba(63,199,255,.16)}
+.mini-leave.on{color:var(--red);border-color:rgba(255,77,109,.4);background:rgba(255,77,109,.08)}
 
 /* ===== 設定（iOS 分組列表） ===== */
 .grp{margin-bottom:20px}
@@ -390,6 +391,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:24px}
     <span class="dot"></span>
     <span class="who" id="topWho"></span>
     <span class="spacer"></span>
+    <button class="mini-leave" id="leaveBtn" style="display:none">離開</button>
     <span class="build" id="topBuild"></span>
   </header>
 
@@ -1299,7 +1301,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:24px}
 <script>
 (function(){
 'use strict';
-var BUILD = '0913-1102';
+var BUILD = '0913-1543';
 /* ================= Firebase ================= */
 var FB_CONFIG = {
   apiKey: "AIzaSyC1ypnHgPuhjoe6u7D-opVzQSZEgv9q34k",
@@ -1725,7 +1727,6 @@ function applyAct(a) {
   switch (a.type) {
     case 'join':
       var r = rosterOf(a.id);
-      if (r && r.blocked) throw new Error('你被移出這桌了，找主辦');
       var chips = (r && r.chips != null) ? r.chips : st.settings.startingChips;
       if (chips <= 0) chips = st.settings.startingChips;
       E.requestJoin(st, a.id, a.name || (r && r.name) || a.id, chips);
@@ -1995,7 +1996,7 @@ function admBind() {
       var i = +b.getAttribute('data-del'), p = ST.seats[i];
       if (!confirm('把 ' + p.name + '（' + p.uid + '）移出牌桌？\n\n籌碼會記著，之後可以原數拉回。')) return;
       db.collection('roster').doc(String(p.uid))
-        .update({ chips: p.chips, blocked: true }).catch(function () {})
+        .update({ chips: p.chips }).catch(function () {})
         .then(function () { return admOp('kick', { seat: i }); })
         .then(admLoadRoster).catch(function () {});
     };
@@ -2016,7 +2017,7 @@ function admBind() {
       admOp('seat', { pid: id, name: r.name, seat: seat })
         .then(function () {
           return db.collection('roster').doc(id)
-            .update({ chips: FV.delete(), blocked: false }).catch(function () {});
+            .update({ chips: FV.delete() }).catch(function () {});
         })
         .then(admLoadRoster)
         .then(function () { toast(r.name + ' 回到 ' + (seat + 1) + ' 號位'); })
@@ -2078,7 +2079,8 @@ function renderSettings() {
     h += '<div class="ios-row tall off"><span class="pl">' +
       '<b>' + esc(r.name) + '</b><em>#' + esc(r.id) + '　不在桌上</em></span>' +
       '<span class="money">' + fmt(r.chips) + '</span>' +
-      '<span class="acts"><button data-rpw="' + esc(r.id) + '">碼</button></span></div>';
+      '<span class="acts"><button data-rset="' + esc(r.id) + '">改籌碼</button>' +
+      '<button data-rpw="' + esc(r.id) + '">改密碼</button></span></div>';
   });
   h += '</div></div>';
 
@@ -2162,6 +2164,19 @@ function bindSettingsExtra() {
   }
   Array.prototype.slice.call($('setPane').querySelectorAll('[data-rpw]')).forEach(function (b) {
     b.onclick = function () { editPw(b.getAttribute('data-rpw')); };
+  });
+  Array.prototype.slice.call($('setPane').querySelectorAll('[data-rset]')).forEach(function (b) {
+    b.onclick = function () {
+      var id = b.getAttribute('data-rset');
+      var r = ADM.roster.filter(function (x) { return x.id === id; })[0] || {};
+      var v = prompt('把 ' + (r.name || id) + ' 的籌碼改成？', r.chips || 0);
+      if (v === null) return;
+      db.collection('roster').doc(String(id))
+        .update({ chips: Math.max(0, Math.round(+v)) })
+        .then(admLoadRoster)
+        .then(function () { toast('已更新'); })
+        .catch(function (e) { toast('改不了：' + e.code, 'bad'); });
+    };
   });
 }
 
@@ -2273,7 +2288,19 @@ signIn().then(function () {
 });
 
 /* ================= 啟動 ================= */
+function initLeaveBtn() {
+  $('leaveBtn').addEventListener('click', function () {
+    if (!ST) return;
+    var p = mySeat >= 0 ? ST.seats[mySeat] : null;
+    if (p && p.leaveAfter) return toast('已經排定這手結束後離開');
+    var inHand = p && ST.hand.phase !== 'idle' && !p.folded;
+    if (!confirm(inHand ? '這手打完後離開牌桌？' : '離開牌桌？籌碼會保留。')) return;
+    send('leave');
+  });
+}
+
 function boot() {
+  initLeaveBtn();
   $('gate').style.display = 'none';
   $('app').style.display = '';
   $('topWho').textContent = myName + '　' + myId;
@@ -2416,10 +2443,26 @@ function renderHome() {
 
 /* ================= 牌桌 ================= */
 function renderTable() {
-  if (!ST) { paint('tableWrap', '<div class="empty">牌桌載入中…</div>'); return; }
+  if (!ST) return;
   renderSeats();
   renderCenter();
   renderBar();
+  renderLeaveBtn();
+}
+
+/* 離開放在右上角，避免打牌時誤觸 */
+function renderLeaveBtn() {
+  var b = $('leaveBtn');
+  if (!b) return;
+  if (TAB !== 'table' || !ST) { b.style.display = 'none'; return; }
+  var qp = Engine.queuePos(ST, myId);
+  var p = mySeat >= 0 ? ST.seats[mySeat] : null;
+  if (!p && !qp) { b.style.display = 'none'; return; }
+  b.style.display = '';
+  if (qp) { b.textContent = '取消候補'; b.className = 'mini-leave'; }
+  else if (p.leaveAfter) { b.textContent = '待離桌'; b.className = 'mini-leave on'; }
+  else if (ST.hand.phase === 'idle') { b.textContent = '離開'; b.className = 'mini-leave'; }
+  else { b.textContent = '離開'; b.className = 'mini-leave'; }
 }
 
 function renderCenter() {
@@ -2536,8 +2579,7 @@ function renderBar() {
     raiseOpen = false;
     $('raiseBox').classList.remove('on');
     bar.innerHTML = qp
-      ? '<div class="waiting">候補中 · 第 ' + qp + ' 位</div>' +
-        '<button class="btn ghost" data-a="leave">取消候補</button>'
+      ? '<div class="waiting">候補中 · 第 ' + qp + ' 位</div>'
       : '<button class="btn" data-a="join">加入牌桌</button>';
     bindBar();
     return;
@@ -2560,10 +2602,7 @@ function renderBar() {
     }
     if (p.leaveAfter) msg = '這手結束後就會離開';
     else if (p.chips <= 0 && ST.hand.phase === 'idle') msg = '你出局了，找主辦補碼';
-    bar.innerHTML = '<div class="waiting">' + msg + '</div>' +
-      (ST.hand.phase === 'idle' && !p.leaveAfter
-        ? '<button class="btn ghost" data-a="leave">離開牌桌</button>'
-        : (!p.leaveAfter ? '<button class="btn ghost" data-a="leave">這手結束後離開</button>' : ''));
+    bar.innerHTML = '<div class="waiting">' + msg + '</div>';
     bindBar();
     return;
   }
@@ -2578,7 +2617,6 @@ function renderBar() {
     h += '<button class="btn" data-a="open">' + (ST.hand.currentBet === 0 ? '下注' : '加注') + '</button>';
   }
   h += '</div>';
-  if (!p.leaveAfter) h += '<button class="leave-link" data-a="leave">這手結束後離開</button>';
   bar.innerHTML = h;
   bindBar();
   if (raiseOpen) setupRaise(L); else $('raiseBox').classList.remove('on');
