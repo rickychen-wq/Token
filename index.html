@@ -9,35 +9,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700&family=Rajdhani:wght@400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
 
 :root{
-  --void:#04070F;
-  --deep:#070D1A;
-  --glass:rgba(12,26,46,.62);
-  --glass-2:rgba(16,34,58,.5);
-  --edge:rgba(88,190,255,.28);
-  --edge-hot:rgba(120,220,255,.75);
-  --cy:#3FC7FF;
-  --cy-hi:#A8EEFF;
-  --cy-dim:#2A7FA8;
-  --gold:#FFD37A;
-  --red:#FF4D6D;
-  --grn:#4BE38F;
-  --fg:#DCEEF8;
-  --fg-dim:#7E9DB4;
-  --fg-faint:#4E687C;
-  --dsp:'Orbitron',sans-serif;
-  --ui:'Rajdhani',sans-serif;
-  --tc:'Noto Sans TC',sans-serif;
+  --void:#04070F; --deep:#070D1A;
+  --glass:rgba(12,26,46,.62); --glass-2:rgba(16,34,58,.5);
+  --edge:rgba(88,190,255,.28); --edge-hot:rgba(120,220,255,.75);
+  --cy:#3FC7FF; --cy-hi:#A8EEFF; --gold:#FFD37A;
+  --red:#FF4D6D; --grn:#4BE38F;
+  --fg:#DCEEF8; --fg-dim:#7E9DB4; --fg-faint:#4E687C;
+  --dsp:'Orbitron',sans-serif; --ui:'Rajdhani',sans-serif; --tc:'Noto Sans TC',sans-serif;
 }
-
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
+html{height:100%}
 body{
-  background:var(--void);color:var(--fg);
-  font-family:var(--tc);font-weight:400;
-  -webkit-font-smoothing:antialiased;
+  min-height:100%;background:var(--void);color:var(--fg);
+  font-family:var(--tc);-webkit-font-smoothing:antialiased;
   overflow-x:hidden;position:relative;
 }
-/* 環境光 */
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:
@@ -45,386 +31,183 @@ body::before{
     radial-gradient(700px 480px at 92% 22%,rgba(63,199,255,.07),transparent 60%),
     radial-gradient(600px 400px at 4% 78%,rgba(63,199,255,.06),transparent 62%);
 }
-body>*{position:relative;z-index:1}
-
-button{font-family:var(--tc);font-size:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button{font-family:var(--tc);color:inherit;cursor:pointer;border:0;background:none;font-size:inherit}
 input,select{font-family:var(--ui);font-size:16px;font-weight:600}
-:focus-visible{outline:1px solid var(--cy);outline-offset:3px}
+:focus-visible{outline:1px solid var(--cy);outline-offset:2px}
 
-/* ============ 面板 ============ */
+/* ===== 通用元件 ===== */
 .panel{
-  position:relative;padding:22px;margin-bottom:16px;border-radius:4px;
+  position:relative;padding:22px;border-radius:4px;
   background:linear-gradient(160deg,var(--glass),var(--glass-2));
   border:1px solid var(--edge);
-  box-shadow:0 0 0 1px rgba(63,199,255,.05),0 18px 50px rgba(0,0,0,.55),
-             inset 0 1px 0 rgba(168,238,255,.12);
+  box-shadow:0 18px 50px rgba(0,0,0,.55),inset 0 1px 0 rgba(168,238,255,.12);
 }
-/* 上緣光條 */
 .panel::before{
   content:'';position:absolute;left:16%;right:16%;top:-1px;height:1px;
   background:linear-gradient(90deg,transparent,var(--edge-hot),transparent);
 }
-.rgb{border-color:rgba(88,190,255,.45)}
-.rgb::before{left:8%;right:8%}
-
-.panel h2{
-  margin:0 0 16px;font-family:var(--dsp);font-size:11px;font-weight:700;
-  color:var(--cy);letter-spacing:.22em;
-  display:flex;align-items:center;gap:10px;
-}
-.panel h2::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--edge),transparent)}
-
 .field{margin-bottom:14px}
-.field label{
-  display:block;color:var(--fg-dim);font-family:var(--tc);font-size:12px;
-  font-weight:500;margin-bottom:7px;letter-spacing:.08em;
-}
+.field label{display:block;color:var(--fg-dim);font-size:12px;font-weight:500;margin-bottom:7px;letter-spacing:.08em}
 .field input,.field select{
   width:100%;padding:12px 13px;border-radius:3px;color:var(--fg);
   background:rgba(4,10,20,.66);border:1px solid var(--edge);
-  transition:border-color .18s,box-shadow .18s;
 }
-.field input:focus,.field select:focus{
-  border-color:var(--edge-hot);outline:none;
-  box-shadow:0 0 0 3px rgba(63,199,255,.1),inset 0 0 24px rgba(63,199,255,.08);
-}
-.row{display:flex;gap:10px}
-.row>*{flex:1}
+.field input:focus,.field select:focus{border-color:var(--edge-hot);outline:none}
 
-/* ============ 按鈕 ============ */
 .btn{
-  position:relative;display:block;width:100%;padding:14px;border-radius:3px;
+  display:block;width:100%;padding:14px;border-radius:3px;
   font-family:var(--dsp);font-weight:700;font-size:13px;letter-spacing:.14em;
-  color:#04070F;overflow:hidden;
-  background:linear-gradient(135deg,var(--cy-hi),var(--cy) 52%,#1FA5DE);
+  color:#04070F;background:linear-gradient(135deg,var(--cy-hi),var(--cy) 52%,#1FA5DE);
   box-shadow:0 6px 26px rgba(63,199,255,.3),inset 0 1px 0 rgba(255,255,255,.5);
-  transition:transform .1s,box-shadow .2s,filter .2s;
+  transition:transform .1s,filter .16s;
 }
-.btn:active{transform:translateY(1px) scale(.99)}
-.btn:hover{filter:brightness(1.08);box-shadow:0 8px 34px rgba(63,199,255,.45)}
-.btn:disabled{opacity:.3;filter:grayscale(.8);cursor:not-allowed}
-
-.btn.ghost{
-  background:rgba(63,199,255,.07);color:var(--cy-hi);
-  border:1px solid var(--edge);box-shadow:inset 0 0 22px rgba(63,199,255,.06);
-}
-.btn.ghost:hover{background:rgba(63,199,255,.16);border-color:var(--edge-hot)}
-.btn.danger{
-  background:linear-gradient(135deg,#FF8AA0,var(--red) 52%,#C8203F);color:#1A0308;
-  box-shadow:0 6px 26px rgba(255,77,109,.3);
-}
-
+.btn:active{transform:scale(.985)}
+.btn:disabled{opacity:.3;filter:grayscale(.8)}
+.btn.ghost{background:rgba(63,199,255,.07);color:var(--cy-hi);border:1px solid var(--edge);box-shadow:none}
+.btn.danger{background:linear-gradient(135deg,#FF8AA0,var(--red) 52%,#C8203F);color:#1A0308;box-shadow:0 6px 26px rgba(255,77,109,.3)}
 .iconbtn{
-  padding:9px 13px;border-radius:3px;color:var(--cy-hi);font-family:var(--ui);font-weight:600;
-  border:1px solid var(--edge);background:rgba(63,199,255,.07);transition:.18s;
+  padding:10px 13px;border-radius:3px;color:var(--cy-hi);font-family:var(--ui);font-weight:700;
+  border:1px solid var(--edge);background:rgba(63,199,255,.07);
 }
-.iconbtn:hover{background:rgba(63,199,255,.18);border-color:var(--edge-hot)}
+.iconbtn.go{background:var(--cy);color:#04070F;border-color:transparent}
+.hint,.note{color:var(--fg-faint);font-size:12.5px;line-height:1.8}
+.note{margin-top:12px;text-align:center}
+.empty{padding:50px 0;text-align:center;color:var(--fg-faint);font-size:13px}
 
-.hint{color:var(--fg-faint);font-size:12.5px;line-height:1.8;font-weight:400}
-
-/* ============ 登入 ============ */
-.gate{max-width:410px;margin:0 auto;padding:56px 22px}
-.brand{
-  margin:0;font-family:var(--dsp);font-weight:700;font-size:40px;
-  letter-spacing:.06em;line-height:1;color:var(--fg);
-  text-shadow:0 0 30px rgba(63,199,255,.5);
-}
+/* ===== 登入 ===== */
+.gate{max-width:410px;margin:0 auto;padding:56px 22px;position:relative;z-index:1}
+.brand{font-family:var(--dsp);font-weight:700;font-size:40px;letter-spacing:.06em;color:var(--fg);text-shadow:0 0 30px rgba(63,199,255,.5)}
 .brand span{color:var(--cy);text-shadow:0 0 26px rgba(63,199,255,.85)}
-.rule{
-  height:1px;margin:20px 0 28px;
-  background:linear-gradient(90deg,var(--edge-hot),rgba(63,199,255,.1) 60%,transparent);
-}
+.rule{height:1px;margin:20px 0 28px;background:linear-gradient(90deg,var(--edge-hot),rgba(63,199,255,.1) 60%,transparent)}
 .id-input{
-  font-size:44px!important;text-align:center;letter-spacing:.3em;
+  font-size:42px!important;text-align:center;letter-spacing:.3em;
   padding:16px 0 16px .3em!important;font-family:var(--dsp)!important;font-weight:700;
   color:var(--cy-hi)!important;text-shadow:0 0 26px rgba(63,199,255,.7);
 }
 
-/* ============ 牌桌 ============ */
-.table-wrap{position:relative;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
-
-.topbar{
-  display:flex;align-items:center;gap:11px;padding:12px 16px;flex:none;
+/* ===== 主框架 ===== */
+#app{
+  position:relative;z-index:1;display:flex;flex-direction:column;
+  height:100vh;height:100dvh;
+}
+.top{
+  flex:none;display:flex;align-items:center;gap:10px;padding:12px 16px;
   border-bottom:1px solid var(--edge);background:rgba(7,13,26,.72);
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
 }
-.topbar .code{font-family:var(--dsp);font-size:12px;letter-spacing:.2em;color:var(--cy)}
-.topbar .spacer{flex:1}
-.chip-icon{
-  width:9px;height:9px;border-radius:50%;display:inline-block;background:var(--cy);
-  box-shadow:0 0 12px var(--cy),0 0 26px rgba(63,199,255,.5);
+.top .dot{
+  width:9px;height:9px;border-radius:50%;background:var(--cy);
+  box-shadow:0 0 12px var(--cy);
+}
+.top .who{font-family:var(--ui);font-weight:700;font-size:15px;letter-spacing:.04em}
+.top .spacer{flex:1}
+.top .build{font-family:var(--ui);font-weight:600;font-size:10.5px;color:var(--fg-faint);letter-spacing:.1em}
+
+.view{flex:1;min-height:0;position:relative}
+.pane{height:100%}
+.pane.scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 14px 24px}
+
+.tabs{
+  flex:none;display:flex;border-top:1px solid var(--edge);
+  background:rgba(7,13,26,.94);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.tabs button{
+  flex:1;padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  color:var(--fg-faint);position:relative;transition:color .18s;
+}
+.tabs button i{font-style:normal;font-size:19px;line-height:1;transition:transform .18s}
+.tabs button span{font-size:10.5px;letter-spacing:.1em}
+.tabs button.on{color:var(--cy-hi)}
+.tabs button.on i{transform:translateY(-1px);text-shadow:0 0 16px rgba(63,199,255,.9)}
+.tabs button.on::before{
+  content:'';position:absolute;top:0;left:26%;right:26%;height:2px;
+  background:var(--cy);box-shadow:0 0 12px var(--cy);
 }
 
-/* 狀態條 */
-.mybar{display:flex;gap:6px;padding:10px 10px 2px;flex:none}
-.mybar .box{
-  flex:1;min-width:0;text-align:center;padding:7px 2px;border-radius:3px;
-  background:linear-gradient(160deg,#0d1c30,#08111f);
+/* ===== 主畫面 ===== */
+.hero{
+  position:relative;padding:22px 20px;border-radius:4px;margin-bottom:18px;
+  background:linear-gradient(150deg,rgba(63,199,255,.14),var(--glass) 45%,var(--glass-2));
+  border:1px solid var(--edge);overflow:hidden;
+}
+.hero::after{
+  content:'';position:absolute;inset:-1px;
+  background:linear-gradient(120deg,transparent 35%,rgba(168,238,255,.28),transparent 65%);
+  background-size:250% 100%;animation:shine 6s ease-in-out infinite;pointer-events:none;
+}
+@keyframes shine{0%,70%{background-position:160% 0}100%{background-position:-60% 0}}
+.hero-name{font-size:17px;font-weight:700}
+.hero-name em{font-style:normal;color:var(--fg-faint);font-family:var(--ui);font-size:13px;margin-left:8px}
+.hero-chips{
+  font-family:var(--dsp);font-weight:700;font-size:42px;line-height:1.15;margin-top:6px;
+  color:var(--gold);text-shadow:0 0 6px rgba(255,211,122,.8),0 0 32px rgba(255,211,122,.4);
+}
+.hero-sub{font-size:11px;color:var(--fg-faint);letter-spacing:.28em}
+.hero-grid{display:flex;gap:10px;margin-top:18px}
+.hero-grid div{
+  flex:1;text-align:center;padding:10px 4px;border-radius:3px;
+  background:rgba(4,10,20,.45);border:1px solid rgba(88,190,255,.16);
+}
+.hero-grid b{display:block;font-family:var(--dsp);font-weight:700;font-size:17px;color:var(--cy-hi)}
+.hero-grid span{font-size:10.5px;color:var(--fg-faint);letter-spacing:.06em}
+
+.lb{
+  border-radius:4px;margin-bottom:14px;overflow:hidden;
+  background:linear-gradient(160deg,var(--glass),var(--glass-2));
   border:1px solid var(--edge);
 }
-.mybar .k{font-size:9.5px;white-space:nowrap;color:var(--fg-faint);letter-spacing:.14em;font-weight:500}
-.mybar .v{
-  font-family:var(--dsp);font-size:clamp(13px,4.4vw,17px);font-weight:700;line-height:1.45;
-  color:var(--cy-hi);text-shadow:0 0 16px rgba(63,199,255,.55);
+.lb-h{
+  padding:12px 15px 10px;font-family:var(--dsp);font-weight:700;font-size:12px;
+  letter-spacing:.18em;color:var(--cy);border-bottom:1px solid rgba(88,190,255,.14);
 }
-.mybar .v.small{font-family:var(--tc);font-size:clamp(10.5px,3.2vw,12.5px);white-space:nowrap;font-weight:500;color:var(--fg);text-shadow:none}
-.mybar .v.now{color:var(--gold);text-shadow:0 0 18px rgba(255,211,122,.75);animation:blink 1.1s steps(2) infinite}
-@keyframes blink{50%{opacity:.4}}
+.lb-h em{
+  font-style:normal;font-family:var(--tc);font-weight:400;font-size:11px;
+  color:var(--fg-faint);letter-spacing:0;margin-left:10px;
+}
+.lb-empty{padding:18px;text-align:center;color:var(--fg-faint);font-size:12.5px}
+.lb-row{display:flex;align-items:center;gap:11px;padding:10px 15px;border-bottom:1px solid rgba(88,190,255,.07)}
+.lb-row:last-child{border-bottom:0}
+.lb-row.me{background:rgba(63,199,255,.09)}
+.lb-row .rk{
+  width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--dsp);font-weight:700;font-size:11px;color:#04070F;background:var(--fg-faint);
+}
+.lb-row .rk.r1{background:linear-gradient(135deg,#FFE9B0,var(--gold));box-shadow:0 0 14px rgba(255,211,122,.6)}
+.lb-row .rk.r2{background:linear-gradient(135deg,#E6F2FA,#9FB8C9)}
+.lb-row .rk.r3{background:linear-gradient(135deg,#F0C08A,#B07A42)}
+.lb-row .nm{flex:1;font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-row .vl{font-family:var(--dsp);font-weight:700;font-size:15px;color:var(--gold)}
 
-/* 桌面 */
+/* ===== 牌桌 ===== */
+.table-pane{display:flex;flex-direction:column;height:100%;overflow:hidden}
 .felt{
-  position:relative;flex:1;margin:10px;min-height:0;border-radius:44%/30%;
+  position:relative;flex:1;min-height:0;margin:10px;border-radius:44%/30%;
   background:
     radial-gradient(ellipse at 50% 40%,rgba(63,199,255,.12),transparent 56%),
     radial-gradient(ellipse at 50% 46%,#0C2038,#070E1E 62%,#04070F);
   border:1px solid var(--edge);
-  box-shadow:
-    inset 0 0 90px rgba(0,0,0,.7),
-    inset 0 0 44px rgba(63,199,255,.09),
-    0 0 70px rgba(63,199,255,.13);
+  box-shadow:inset 0 0 90px rgba(0,0,0,.7),inset 0 0 44px rgba(63,199,255,.09),0 0 70px rgba(63,199,255,.13);
 }
-.felt::before{
-  content:'';position:absolute;inset:18px;border-radius:44%/30%;pointer-events:none;
-  border:1px solid rgba(63,199,255,.13);
-}
-.center{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);text-align:center;z-index:3;pointer-events:none}
-.pot-label{font-family:var(--dsp);color:var(--fg-faint);font-size:9.5px;letter-spacing:.36em;font-weight:500;margin-bottom:2px}
+.felt::before{content:'';position:absolute;inset:16px;border-radius:44%/30%;border:1px solid rgba(63,199,255,.12);pointer-events:none}
+.center{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);text-align:center;z-index:3;pointer-events:none;width:62%}
+.pot-label{font-family:var(--dsp);color:var(--fg-faint);font-size:9px;letter-spacing:.36em}
 .pot{
-  font-family:var(--dsp);font-weight:700;font-size:clamp(28px,11vw,46px);line-height:1.1;
-  color:var(--gold);letter-spacing:.01em;font-variant-numeric:tabular-nums;
-  text-shadow:0 0 6px rgba(255,211,122,.8),0 0 34px rgba(255,211,122,.45);
+  font-family:var(--dsp);font-weight:700;font-size:clamp(26px,10vw,44px);line-height:1.1;
+  color:var(--gold);text-shadow:0 0 6px rgba(255,211,122,.85),0 0 30px rgba(255,211,122,.4);
 }
-.pot.bump{animation:bump .34s ease-out}
+.pot.bump{animation:bump .32s ease-out}
 @keyframes bump{0%{transform:scale(1)}36%{transform:scale(1.12)}100%{transform:scale(1)}}
+.stack{display:flex;justify-content:center;gap:2px;height:11px;margin-top:6px}
+.stack i{width:18px;height:4px;border-radius:2px;align-self:flex-end;background:var(--gold);box-shadow:0 0 9px rgba(255,211,122,.75);animation:rise .3s cubic-bezier(.2,1.6,.4,1) backwards}
+.stack i:nth-child(even){background:var(--cy);box-shadow:0 0 9px rgba(63,199,255,.75);height:6px}
+@keyframes rise{from{transform:translateY(10px) scaleX(.2);opacity:0}}
+.phase{color:var(--fg-dim);font-size:11px;margin-top:8px;letter-spacing:.16em}
+.sidepots{font-family:var(--ui);font-weight:600;font-size:10.5px;color:var(--fg-faint);margin-top:4px}
 
-.stack{display:flex;justify-content:center;gap:3px;height:15px;margin-top:10px}
-.stack i{
-  width:20px;height:5px;border-radius:2px;align-self:flex-end;background:var(--gold);
-  box-shadow:0 0 12px rgba(255,211,122,.8);
-  animation:rise .32s cubic-bezier(.2,1.6,.4,1) backwards;
-}
-.stack i:nth-child(even){background:var(--cy);box-shadow:0 0 12px rgba(63,199,255,.8);height:7px}
-@keyframes rise{from{transform:translateY(12px) scaleX(.2);opacity:0}}
-
-.phase{color:var(--fg-dim);font-size:11.5px;margin-top:11px;letter-spacing:.16em;font-weight:400}
-.sidepots{font-family:var(--ui);font-size:11.5px;color:var(--fg-faint);margin-top:6px;font-weight:600}
-
-/* 座位 */
-.seat{position:absolute;transform:translate(-50%,-50%);width:96px;text-align:center;z-index:4}
-.seat .card{padding:7px 4px}
-.seat .card{
-  position:relative;padding:9px 6px;border-radius:3px;
-  background:linear-gradient(160deg,#0e1e34,#070f1c);
-  border:1px solid var(--edge);
-  box-shadow:inset 0 1px 0 rgba(168,238,255,.1);
-  transition:transform .22s,box-shadow .22s,border-color .22s;
-}
-.seat .card::before{
-  content:'';position:absolute;left:22%;right:22%;top:-1px;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(120,220,255,.5),transparent);
-}
-.seat.empty .card{border-style:dashed;opacity:.34}
-.seat.folded{opacity:.3;filter:saturate(.3)}
-.seat.me .card{border-color:rgba(75,227,143,.45);box-shadow:0 0 22px rgba(75,227,143,.16),inset 0 1px 0 rgba(168,238,255,.1)}
-
-.seat.turn{z-index:6}
-.seat.turn .card{
-  transform:scale(1.1);border-color:var(--edge-hot);
-  box-shadow:0 0 0 1px rgba(120,220,255,.4),0 0 34px rgba(63,199,255,.5),
-             inset 0 0 22px rgba(63,199,255,.14);
-  animation:turnGlow 1.8s ease-in-out infinite;
-}
-@keyframes turnGlow{
-  50%{box-shadow:0 0 0 1px rgba(120,220,255,.7),0 0 52px rgba(63,199,255,.75),inset 0 0 26px rgba(63,199,255,.2)}
-}
-
-.seat .nm{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.seat .ch{
-  font-family:var(--dsp);font-weight:700;font-size:13px;color:var(--gold);
-  text-shadow:0 0 12px rgba(255,211,122,.55);font-variant-numeric:tabular-nums;
-}
-.seat .st{font-size:10.5px;color:var(--fg-faint);letter-spacing:.06em}
-.seat .allin{
-  font-family:var(--dsp);font-weight:700;font-size:9.5px;color:var(--red);
-  letter-spacing:.14em;text-shadow:0 0 14px rgba(255,77,109,.9);animation:blink 1.1s steps(2) infinite;
-}
-.seat .bet{
-  margin-top:7px;font-family:var(--ui);font-weight:700;font-size:12px;color:#1A1204;
-  background:linear-gradient(135deg,#FFE6AE,var(--gold));border-radius:20px;
-  padding:2px 10px;display:inline-block;
-  box-shadow:0 0 16px rgba(255,211,122,.65);
-  animation:pop .26s cubic-bezier(.2,1.7,.4,1);
-}
-@keyframes pop{from{transform:scale(.4);opacity:0}}
-.seat .tag{
-  position:absolute;top:-8px;right:-5px;font-family:var(--tc);font-size:9px;font-weight:700;white-space:nowrap;
-  color:#04070F;border-radius:3px;padding:2px 7px;letter-spacing:.06em;
-  background:linear-gradient(135deg,var(--cy-hi),var(--cy));
-  box-shadow:0 0 16px rgba(63,199,255,.8);
-}
-
-/* 動作列 */
-.actions{
-  flex:none;padding:10px 11px calc(14px + env(safe-area-inset-bottom));
-  border-top:1px solid var(--edge);background:rgba(7,13,26,.8);
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-}
-.act-row{display:flex;gap:7px}
-.act-row .btn{padding:16px 4px;font-size:clamp(11px,3.4vw,13px);letter-spacing:.06em}
-.raise-box{display:none;margin-bottom:11px}
-.raise-box.on{display:block;animation:slideUp .22s ease-out}
-@keyframes slideUp{from{transform:translateY(12px);opacity:0}}
-.raise-top{display:flex;align-items:center;gap:9px;margin-bottom:9px}
-.raise-top input[type=number]{
-  flex:1;padding:11px;border-radius:3px;text-align:center;
-  font-family:var(--dsp);font-weight:700;font-size:20px;color:var(--gold);
-  background:rgba(4,10,20,.7);border:1px solid rgba(255,211,122,.3);
-  text-shadow:0 0 18px rgba(255,211,122,.6);
-}
-.quick{display:flex;gap:7px}
-.quick button{
-  flex:1;padding:9px 2px;border-radius:3px;font-family:var(--ui);font-weight:600;font-size:12.5px;
-  color:var(--cy-hi);border:1px solid var(--edge);background:rgba(63,199,255,.06);transition:.16s;
-}
-.quick button:hover{background:rgba(63,199,255,.18);border-color:var(--edge-hot)}
-input[type=range]{width:100%;accent-color:var(--cy);height:26px}
-.waiting{text-align:center;color:var(--fg-faint);padding:18px 0;font-size:13px;letter-spacing:.1em}
-
-/* 抽屜 */
-.drawer{position:fixed;inset:0;z-index:60;background:rgba(2,4,10,.82);display:none}
-.drawer.on{display:block;animation:fade .2s}
-@keyframes fade{from{opacity:0}}
-.drawer-inner{
-  position:absolute;right:0;top:0;bottom:0;width:min(410px,93vw);padding:22px;overflow-y:auto;
-  background:linear-gradient(200deg,rgba(11,24,42,.97),rgba(5,9,18,.99));
-  border-left:1px solid var(--edge);
-  animation:slideIn .2s cubic-bezier(.2,.9,.3,1);
-  will-change:transform;
-  -webkit-overflow-scrolling:touch;
-}
-@keyframes slideIn{from{transform:translateX(100%)}}
-.drawer h3{margin:0 0 4px;font-family:var(--dsp);font-weight:700;font-size:17px;letter-spacing:.06em}
-.drawer .sec{
-  margin:24px 0 10px;font-family:var(--dsp);font-size:10.5px;font-weight:700;letter-spacing:.24em;
-  color:var(--cy);display:flex;align-items:center;gap:10px;
-}
-.drawer .sec::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--edge),transparent)}
-
-.pot-award{
-  border:1px solid rgba(255,211,122,.26);border-radius:3px;padding:14px;margin-bottom:12px;
-  background:rgba(255,211,122,.045);
-}
-.pot-award .h{font-family:var(--dsp);font-weight:700;color:var(--gold);margin-bottom:11px;font-size:12.5px;letter-spacing:.08em}
-.winner-pick{display:flex;flex-wrap:wrap;gap:8px}
-.winner-pick button{
-  padding:10px 14px;border-radius:3px;font-size:13px;
-  border:1px solid var(--edge);background:rgba(63,199,255,.05);transition:.16s;
-}
-.winner-pick button.on{
-  background:linear-gradient(135deg,#FFE6AE,var(--gold));color:#1A1204;font-weight:700;
-  border-color:transparent;box-shadow:0 0 24px rgba(255,211,122,.6);
-}
-
-.logbox{
-  font-size:12px;color:var(--fg-dim);line-height:1.95;max-height:200px;overflow-y:auto;
-  border-left:1px solid var(--edge);padding-left:13px;
-}
-
-.toast{
-  position:fixed;left:50%;bottom:102px;transform:translate(-50%,14px);
-  padding:13px 20px;border-radius:3px;font-size:13.5px;z-index:200;
-  background:rgba(11,24,42,.96);border:1px solid var(--edge);color:var(--fg);
-  box-shadow:0 14px 44px rgba(0,0,0,.6),0 0 30px rgba(63,199,255,.14);
-  opacity:0;pointer-events:none;transition:.22s;max-width:88vw;text-align:center;
-  backdrop-filter:blur(12px);
-}
-.toast.show{opacity:1;transform:translate(-50%,0)}
-.toast.bad{border-color:rgba(255,77,109,.55);color:#FFC2CD;box-shadow:0 0 34px rgba(255,77,109,.3)}
-
-.banner{
-  position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:6;
-  background:rgba(255,77,109,.12);border:1px solid rgba(255,77,109,.45);border-radius:3px;
-  color:#FFC2CD;font-size:12px;padding:9px 15px;white-space:nowrap;letter-spacing:.06em;
-  animation:blink 1.9s steps(2) infinite;
-}
-
-/* 贏牌 */
-#burst{position:fixed;inset:0;pointer-events:none;z-index:800;display:none}
-#burst.on{display:block}
-#burst i{
-  position:absolute;left:50%;top:44%;width:3px;height:13px;border-radius:2px;
-  background:var(--gold);box-shadow:0 0 14px var(--gold);
-  animation:fly .95s cubic-bezier(.15,.7,.3,1) forwards;
-}
-@keyframes fly{
-  0%{transform:translate(-50%,-50%) scaleY(.3);opacity:1}
-  100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scaleY(1.4) rotate(var(--rot));opacity:0}
-}
-
-/* ============ 後台 ============ */
-.admin{max-width:660px;margin:0 auto;padding:24px 18px 76px}
-.admin h1{
-  font-family:var(--dsp);font-weight:700;font-size:24px;margin:6px 0 0;
-  color:var(--fg);letter-spacing:.06em;text-shadow:0 0 26px rgba(63,199,255,.45);
-}
-.admin h1 span{color:var(--cy)}
-.prow{display:flex;align-items:center;gap:9px;padding:13px 0;border-bottom:1px solid rgba(88,190,255,.1)}
-.prow .id{font-family:var(--dsp);font-weight:700;font-size:16px;min-width:38px;text-align:center;color:var(--cy);text-shadow:0 0 14px rgba(63,199,255,.5)}
-.prow .who{flex:1;min-width:0}
-.prow .who b{display:block;font-size:14px;font-weight:500}
-.prow .who small{color:var(--fg-faint);font-size:11px}
-.prow .money{
-  font-family:var(--dsp);font-weight:700;font-size:15px;min-width:66px;text-align:right;
-  color:var(--gold);text-shadow:0 0 14px rgba(255,211,122,.5);font-variant-numeric:tabular-nums;
-}
-.prow button{
-  padding:8px 11px;border-radius:3px;font-size:12px;color:var(--cy-hi);
-  border:1px solid var(--edge);background:rgba(63,199,255,.06);transition:.16s;
-}
-.prow button:hover{background:rgba(63,199,255,.18);border-color:var(--edge-hot)}
-.prow.out{opacity:.42}
-.prow.out .money{color:var(--red);text-shadow:none}
-
-.totals{display:flex;gap:10px;margin-bottom:18px}
-.totals > div{
-  flex:1;padding:14px 8px;text-align:center;border-radius:3px;
-  background:linear-gradient(160deg,#0d1c30,#08111f);
-  border:1px solid var(--edge);
-}
-.totals > div > .k{font-size:11px;color:var(--fg-faint);letter-spacing:.16em;font-weight:500}
-.totals > div > .v{
-  font-family:var(--dsp);font-weight:700;font-size:21px;color:var(--cy-hi);
-  text-shadow:0 0 20px rgba(63,199,255,.5);font-variant-numeric:tabular-nums;
-}
-
-@media (max-width:400px){
-  .brand{font-size:32px}
-  .topbar{padding:9px 12px}
-  .phase{font-size:10.5px;margin-top:7px}
-  .pot-label{font-size:8.5px;letter-spacing:.28em}
-}
-@media (max-height:700px){
-  .board{margin-bottom:7px}
-  .stack{height:11px;margin-top:6px}
-  .stack i{height:4px}
-}
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation:none!important;transition:none!important}
-}
-
-.diagline{
-  font-family:var(--ui);font-weight:600;font-size:12.5px;color:var(--fg-dim);
-  padding:5px 0;border-bottom:1px solid rgba(88,190,255,.08);letter-spacing:.02em;
-}
-.diagline b{color:var(--cy-hi);font-weight:700}
-.diagline.hot{color:var(--gold)}
-.diagline.hot b{color:var(--gold)}
-
-/* ---- 牌 ---- */
-.board{display:flex;justify-content:center;gap:5px;margin-bottom:11px}
+.board{display:flex;justify-content:center;gap:4px;margin-bottom:9px}
 .c{
-  width:clamp(26px,7.4vw,34px);height:clamp(36px,10.4vw,48px);border-radius:4px;
-  border:1px dashed rgba(88,190,255,.26);background:rgba(4,10,20,.35);
+  width:clamp(24px,6.8vw,32px);height:clamp(33px,9.6vw,45px);border-radius:4px;
+  border:1px dashed rgba(88,190,255,.24);background:rgba(4,10,20,.35);
   display:flex;align-items:center;justify-content:center;
 }
 .c.up{
@@ -433,61 +216,160 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
   box-shadow:0 2px 10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.9);
   animation:flip .3s cubic-bezier(.2,1.4,.4,1) backwards;
 }
-.c.up span{
-  font-family:var(--ui);font-weight:700;color:#0b1622;
-  font-size:clamp(12px,3.6vw,16px);line-height:1;letter-spacing:-.02em;
-}
+.c.up span{font-family:var(--ui);font-weight:700;color:#0b1622;font-size:clamp(11px,3.3vw,15px);line-height:1}
 .c.up.red span{color:#d3172f}
-@keyframes flip{
-  from{transform:rotateY(90deg) scale(.82);opacity:0}
-  to{transform:rotateY(0) scale(1);opacity:1}
+@keyframes flip{from{transform:rotateY(90deg) scale(.82);opacity:0}to{transform:rotateY(0) scale(1);opacity:1}}
+
+.seat{position:absolute;transform:translate(-50%,-50%);width:92px;text-align:center;z-index:4}
+.seat .card{
+  position:relative;padding:7px 4px;border-radius:3px;
+  background:linear-gradient(160deg,#0e1e34,#070f1c);
+  border:1px solid var(--edge);
+  box-shadow:inset 0 1px 0 rgba(168,238,255,.1);
+  transition:transform .2s,box-shadow .2s,border-color .2s;
+}
+.seat.empty .card{border-style:dashed;opacity:.32}
+.seat.folded{opacity:.3}
+.seat.me .card{border-color:rgba(75,227,143,.45)}
+.seat.turn{z-index:6}
+.seat.turn .card{
+  transform:scale(1.09);border-color:var(--edge-hot);
+  box-shadow:0 0 0 1px rgba(120,220,255,.4),0 0 32px rgba(63,199,255,.5);
+  animation:glow 1.8s ease-in-out infinite;
+}
+@keyframes glow{50%{box-shadow:0 0 0 1px rgba(120,220,255,.7),0 0 50px rgba(63,199,255,.75)}}
+.seat .nm{font-size:11.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seat .nm.dim{color:var(--fg-faint)}
+.seat .ch{font-family:var(--dsp);font-weight:700;font-size:12.5px;color:var(--gold)}
+.seat .st{font-size:10px;color:var(--fg-faint)}
+.seat .allin{font-family:var(--dsp);font-weight:700;font-size:9px;color:var(--red);letter-spacing:.12em}
+.seat .bet{
+  margin-top:5px;font-family:var(--ui);font-weight:700;font-size:11px;color:#1A1204;
+  background:linear-gradient(135deg,#FFE6AE,var(--gold));border-radius:20px;padding:1px 9px;display:inline-block;
+  box-shadow:0 0 14px rgba(255,211,122,.6);animation:pop .24s cubic-bezier(.2,1.7,.4,1);
+}
+@keyframes pop{from{transform:scale(.4);opacity:0}}
+.seat .tag{
+  position:absolute;top:-8px;right:-5px;font-size:9px;font-weight:700;color:#04070F;
+  padding:2px 6px;border-radius:3px;background:linear-gradient(135deg,var(--cy-hi),var(--cy));
+  white-space:nowrap;box-shadow:0 0 12px rgba(63,199,255,.7);
+}
+.seat .mini{display:flex;justify-content:center;gap:3px;margin-top:4px}
+.seat .mini .c{width:18px;height:24px;border-radius:2px}
+.seat .mini .c.up span{font-size:9px}
+.seat .hand-name{font-size:9.5px;color:var(--grn);margin-top:2px}
+
+.my-cards{display:flex;align-items:center;justify-content:center;gap:6px;padding:6px 0 0;flex:none}
+.my-cards .lbl{font-size:11px;color:var(--fg-faint);letter-spacing:.16em;margin-right:4px}
+.my-cards .c{width:38px;height:53px}
+.my-cards .c.up span{font-size:18px}
+
+.raise-box{display:none;padding:10px 12px 0;flex:none}
+.raise-box.on{display:block;animation:slideUp .2s ease-out}
+@keyframes slideUp{from{transform:translateY(10px);opacity:0}}
+.raise-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.raise-top input{
+  flex:1;padding:11px;border-radius:3px;text-align:center;
+  font-family:var(--dsp);font-weight:700;font-size:19px;color:var(--gold);
+  background:rgba(4,10,20,.7);border:1px solid rgba(255,211,122,.35);
+}
+.quick{display:flex;gap:6px}
+.quick button{
+  flex:1;padding:9px 2px;border-radius:3px;font-family:var(--ui);font-weight:600;font-size:12px;
+  color:var(--cy-hi);border:1px solid var(--edge);background:rgba(63,199,255,.06);
+}
+input[type=range]{width:100%;accent-color:var(--cy);height:24px}
+
+.bar{flex:none;padding:10px 12px 12px}
+.turn-hint{text-align:center;font-size:12px;color:var(--cy-hi);letter-spacing:.14em;margin-bottom:7px}
+.turn-hint b{font-family:var(--dsp);font-size:15px;color:var(--gold)}
+.act-row{display:flex;gap:7px}
+.act-row .btn{padding:16px 4px;font-size:clamp(11px,3.4vw,13px);letter-spacing:.06em}
+.waiting{text-align:center;color:var(--fg-faint);padding:12px 0;font-size:12.5px;letter-spacing:.08em}
+.waiting + .btn{margin-top:2px}
+.leave-link{
+  display:block;width:100%;margin-top:9px;padding:6px 0;
+  font-size:12px;color:var(--fg-faint);letter-spacing:.06em;text-align:center;
+}
+.leave-link:active{color:var(--cy-hi)}
+
+/* ===== 設定（iOS 分組列表） ===== */
+.grp{margin-bottom:20px}
+.grp-h{
+  font-family:var(--dsp);font-size:11px;font-weight:700;letter-spacing:.2em;
+  color:var(--cy);padding:0 4px 8px;
+}
+.grp-b{
+  border-radius:10px;overflow:hidden;
+  background:linear-gradient(160deg,var(--glass),var(--glass-2));
+  border:1px solid var(--edge);
+}
+.ios-row{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;
+  border-bottom:1px solid rgba(88,190,255,.09);font-size:14px;
+}
+.ios-row:last-child{border-bottom:0}
+.ios-row>span:first-child{flex:1;color:var(--fg)}
+.ios-row b{font-family:var(--ui);font-weight:700;color:var(--cy-hi)}
+.ios-row input,.ios-row select{
+  width:118px;padding:8px 10px;border-radius:6px;text-align:right;color:var(--fg);
+  background:rgba(4,10,20,.6);border:1px solid var(--edge);
+}
+.ios-row.tall{align-items:flex-start;flex-wrap:wrap}
+.ios-row.off{opacity:.55}
+.ios-row .pl{flex:1;min-width:0}
+.ios-row .pl b{display:block;font-family:var(--tc);font-size:14px;color:var(--fg)}
+.ios-row .pl em{font-style:normal;font-size:11px;color:var(--fg-faint);font-family:var(--ui)}
+.ios-row .money{font-family:var(--dsp);font-weight:700;font-size:15px;color:var(--gold)}
+.ios-row .acts{display:flex;gap:5px;width:100%;margin-top:8px}
+.ios-row .acts button{
+  flex:1;padding:7px 0;border-radius:6px;font-size:12px;color:var(--cy-hi);
+  border:1px solid var(--edge);background:rgba(63,199,255,.06);
+}
+.grp-b.diag,.grp-b.logbox{padding:12px 14px;font-family:var(--ui);font-weight:600;font-size:12px;color:var(--fg-dim);line-height:1.9}
+.grp-b.logbox{max-height:210px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.grp-b.diag .hot{color:var(--gold)}
+
+/* ===== 提示 ===== */
+.toast{
+  position:fixed;left:50%;bottom:92px;transform:translate(-50%,14px);
+  padding:13px 20px;border-radius:3px;font-size:13.5px;z-index:200;
+  background:rgba(11,24,42,.96);border:1px solid var(--edge);color:var(--fg);
+  box-shadow:0 14px 44px rgba(0,0,0,.6);
+  opacity:0;pointer-events:none;transition:.22s;max-width:88vw;text-align:center;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.bad{border-color:rgba(255,77,109,.55);color:#FFC2CD}
+
+#burst{position:fixed;inset:0;pointer-events:none;z-index:800;display:none}
+#burst.on{display:block}
+#burst i{
+  position:absolute;left:50%;top:42%;width:3px;height:13px;border-radius:2px;
+  background:var(--gold);box-shadow:0 0 14px var(--gold);
+  animation:fly .95s cubic-bezier(.15,.7,.3,1) forwards;
+}
+@keyframes fly{
+  0%{transform:translate(-50%,-50%) scaleY(.3);opacity:1}
+  100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scaleY(1.4) rotate(var(--rot));opacity:0}
 }
 
-/* 自己的底牌 */
-.my-cards{
-  display:flex;align-items:center;justify-content:center;gap:6px;
-  padding:8px 0 2px;flex:none;
+@media (max-width:400px){
+  .brand{font-size:33px}
+  .seat{width:78px}
+  .hero-chips{font-size:36px}
 }
-.my-cards .lbl{
-  font-size:11px;color:var(--fg-faint);letter-spacing:.18em;margin-right:4px;
-}
-.my-cards .c{width:40px;height:56px}
-.my-cards .c.up span{font-size:19px}
-
-/* 座位上攤開的牌 */
-.seat .mini{display:flex;justify-content:center;gap:3px;margin-top:5px}
-.seat .mini .c{width:20px;height:27px;border-radius:3px}
-.seat .mini .c.up span{font-size:10px}
-.seat .hand-name{
-  font-size:10px;color:var(--grn);margin-top:3px;letter-spacing:.04em;
-  text-shadow:0 0 10px rgba(75,227,143,.5);
-}
-
-/* ---- 攤牌 ---- */
-.showdown{text-align:center;padding:4px 0 2px}
-.sd-h{font-size:13px;color:var(--gold);margin-bottom:9px;letter-spacing:.1em}
-.sd-pot{
-  font-size:12.5px;color:var(--fg-dim);padding:6px 0;
-  border-top:1px solid rgba(88,190,255,.1);
-}
-.sd-pot b{font-family:var(--dsp);color:var(--gold);font-size:14px}
-.sd-pot.done{color:var(--grn)}
-.build{
-  font-family:var(--ui);font-weight:600;font-size:10.5px;color:var(--fg-faint);
-  letter-spacing:.1em;
-}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 
 </style>
 </head>
 <body>
 
-<div id="gateView" class="gate">
+<div id="gate" class="gate">
   <h1 class="brand">籌碼<span>桌</span></h1>
   <div class="rule"></div>
-
-  <div class="panel rgb">
+  <div class="panel">
     <div class="field">
-      <label for="pid">你的編號</label>
+      <label for="pid">編號</label>
       <input id="pid" class="id-input" maxlength="2" inputmode="numeric" placeholder="00" autocomplete="off">
     </div>
     <div class="field" id="nameWrap" style="display:none">
@@ -498,66 +380,63 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
       <label for="pw" id="pwLabel">密碼</label>
       <input id="pw" type="password" placeholder="輸入密碼" autocomplete="current-password">
     </div>
-    <button class="btn" id="loginBtn" disabled>進入牌桌</button>
-    <p class="hint" id="gateHint" style="margin-top:12px">
-      打一組沒人用過的兩位數編號就能註冊。
-    </p>
+    <button class="btn" id="loginBtn">進入</button>
+    <p class="hint" id="gateHint" style="margin-top:12px">打一組沒人用過的兩位數編號就能註冊。</p>
   </div>
 </div>
 
-<div id="tableView" class="table-wrap" style="display:none">
-
-  <div class="topbar">
-    <span class="chip-icon"></span>
-    <span class="code" id="whoami">--</span>
-    <span class="build" id="topBuild"></span>
+<div id="app" style="display:none">
+  <header class="top">
+    <span class="dot"></span>
+    <span class="who" id="topWho"></span>
     <span class="spacer"></span>
-    <button class="iconbtn" id="drawerBtn">☰</button>
-  </div>
+    <span class="build" id="topBuild"></span>
+  </header>
 
-  <div class="mybar">
-    <div class="box"><div class="k">座位</div><div class="v" id="mySeatNo">—</div></div>
-    <div class="box"><div class="k">我的籌碼</div><div class="v" id="myChips">—</div></div>
-    <div class="box"><div class="k">輪到大盲</div><div class="v small" id="bbIn">—</div></div>
-    <div class="box"><div class="k">輪到小盲</div><div class="v small" id="sbIn">—</div></div>
-  </div>
+  <main class="view">
+    <section id="homePane" class="pane scroll"></section>
 
-  <div class="felt" id="felt">
-    <div class="center pot-hero">
-      <div class="board" id="board"></div>
-      <div class="pot-label">總獎池</div>
-      <div class="pot" id="pot">0</div>
-      <div class="stack" id="stack"></div>
-      <div class="phase" id="phase">等待開牌</div>
-      <div class="sidepots" id="sidepots"></div>
-    </div>
-    <div class="banner" id="banner" style="display:none"></div>
-  </div>
-
-  <div class="my-cards" id="myCards"></div>
-
-  <div class="actions" id="actions">
-    <div class="raise-box" id="raiseBox">
-      <div class="raise-top">
-        <input type="number" id="raiseVal" step="1">
-        <button class="iconbtn" id="raiseCancel">取消</button>
+    <section id="tablePane" class="pane table-pane" style="display:none">
+      <div class="felt" id="felt">
+        <div class="center">
+          <div class="board" id="board"></div>
+          <div class="pot-label">總獎池</div>
+          <div class="pot" id="pot">0</div>
+          <div class="stack" id="stack"></div>
+          <div class="phase" id="phase"></div>
+          <div class="sidepots" id="sidepots"></div>
+        </div>
       </div>
-      <input type="range" id="raiseSlider">
-      <div class="quick">
-        <button data-q="min">最小</button>
-        <button data-q="half">½ 池</button>
-        <button data-q="pot">滿池</button>
-        <button data-q="all">全下</button>
+      <div class="my-cards" id="myCards"></div>
+      <div class="raise-box" id="raiseBox">
+        <div class="raise-top">
+          <input type="number" id="raiseVal" step="1">
+          <button class="iconbtn" id="raiseNo">取消</button>
+          <button class="iconbtn go" id="raiseGo">確認</button>
+        </div>
+        <input type="range" id="raiseSlider">
+        <div class="quick">
+          <button data-q="min">最小</button>
+          <button data-q="half">½ 池</button>
+          <button data-q="pot">滿池</button>
+          <button data-q="all">全下</button>
+        </div>
       </div>
-    </div>
-    <div id="actRow"></div>
-  </div>
+      <div class="bar" id="bar"></div>
+    </section>
 
+    <section id="setPane" class="pane scroll" style="display:none"></section>
+  </main>
+
+  <nav class="tabs">
+    <button data-tab="home" class="on"><i>◈</i><span>主畫面</span></button>
+    <button data-tab="table"><i>♠</i><span>牌桌</span></button>
+    <button data-tab="settings"><i>⚙</i><span>設定</span></button>
+  </nav>
 </div>
 
-<div class="drawer" id="drawer"><div class="drawer-inner" id="drawerInner"></div></div>
-<div id="burst"></div>
 <div class="toast" id="toast"></div>
+<div id="burst"></div>
 
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -710,6 +589,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
       startingChips: 5000,
       joinMode: 'anyone',      // anyone | hostOnly
       lateEntry: 'postBB',     // postBB | waitBB
+      turnSec: 45,             // 幾秒沒動作就自動過牌／蓋牌
       autoNext: true,          // 一手結束後自動開下一手
       autoDelay: 6,            // 幾秒後開
       disconnectSec: 30
@@ -726,7 +606,9 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
         phase: 'idle', turnSeat: -1, currentBet: 0, minRaise: settings.bb
       },
       pots: [],
-      pendingAward: null,
+      queue: [],
+      board: [],
+      reveal: null,
       log: []
     };
   };
@@ -780,6 +662,61 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
   function log(st, text) {
     st.log = (st.log || []).concat([{ t: Date.now(), text: text }]).slice(-25);
   }
+
+  /* 候補依序補進空位，號碼小的先 */
+  function fillFromQueue(st) {
+    st.queue = st.queue || [];
+    while (st.queue.length) {
+      var free = -1, i;
+      for (i = 0; i < st.seats.length; i++) if (!st.seats[i]) { free = i; break; }
+      if (free < 0) break;
+      var q = st.queue.shift();
+      if (E.seatOf(st, q.id) >= 0) continue;
+      var p = E.newPlayer(q.id, q.name, q.chips, free);
+      p.state = 'playing';
+      st.seats[free] = p;
+      log(st, q.name + ' 入座 ' + (free + 1) + ' 號位');
+    }
+  }
+  E.fillFromQueue = fillFromQueue;
+
+  E.queuePos = function (st, id) {
+    var q = st.queue || [];
+    for (var i = 0; i < q.length; i++) if (q[i].id === id) return i + 1;
+    return 0;
+  };
+
+  /* 要求入座：有空位就坐，沒有就排候補 */
+  E.requestJoin = function (st, id, name, chips) {
+    if (E.seatOf(st, id) >= 0) throw new Error('你已經在桌上了');
+    st.queue = st.queue || [];
+    for (var i = 0; i < st.queue.length; i++) {
+      if (st.queue[i].id === id) throw new Error('你已經在候補了');
+    }
+    st.queue.push({ id: id, name: String(name).slice(0, 12), chips: chips });
+    if (st.hand.phase === 'idle') fillFromQueue(st);
+    else log(st, name + ' 排入候補，下一手進場');
+    return st;
+  };
+
+  /* 要求離桌：牌局進行中要打完這手才准走 */
+  E.requestLeave = function (st, id) {
+    st.queue = st.queue || [];
+    for (var i = 0; i < st.queue.length; i++) {
+      if (st.queue[i].id === id) { st.queue.splice(i, 1); return st; }
+    }
+    var seat = E.seatOf(st, id);
+    if (seat < 0) throw new Error('你不在桌上');
+    var p = st.seats[seat];
+    if (st.hand.phase !== 'idle' && inHand(p)) {
+      p.leaveAfter = true;
+      log(st, p.name + ' 這手結束後離開');
+    } else {
+      log(st, p.name + ' 離開牌桌');
+      st.seats[seat] = null;
+    }
+    return st;
+  };
 
   /* ---------- 入座 / 離座 ---------- */
   E.sit = function (st, uid, name, seat) {
@@ -855,6 +792,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
   /* ---------- 開新一手 ---------- */
   E.startHand = function (st, forcedDealer) {
     if (st.hand.phase !== 'idle') throw new Error('上一手還沒結束');
+    fillFromQueue(st);
     var n = st.seats.length, i;
 
     // 沒籌碼的自動暫離
@@ -1114,6 +1052,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
         var total = 0;
         st.pots.forEach(function (p) { total += p.amount; });
         st.seats[winner].chips += total;
+        st._winners = [winner];
         log(st, st.seats[winner].name + ' 贏得 ' + fmtn(total) + '（其他人都蓋牌）');
         st.reveal = null;
         endHand(st);
@@ -1180,6 +1119,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
       reveal[i] = { hole: hole, best: b.cards, name: b.name, score: b.score };
     }
     st.reveal = reveal;
+    st._winners = [];
     log(st, '— 攤牌 —');
 
     // 每個池各自比，同分平分
@@ -1193,7 +1133,10 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
       var each = Math.floor(pot.amount / winners.length);
       var rem = pot.amount - each * winners.length;
       var ordered = orderFromDealer(st, winners);
-      ordered.forEach(function (seat, k) { st.seats[seat].chips += each + (k < rem ? 1 : 0); });
+      ordered.forEach(function (seat, k) {
+        st.seats[seat].chips += each + (k < rem ? 1 : 0);
+        if (st._winners.indexOf(seat) < 0) st._winners.push(seat);
+      });
 
       log(st, (pi === 0 ? '主池 ' : '邊池' + pi + ' ') + fmtn(pot.amount) + ' → ' +
         ordered.map(function (x) { return st.seats[x].name; }).join('、') +
@@ -1270,22 +1213,35 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
   }
 
   function endHand(st) {
-    var results = [];
+    var results = [], winners = st._winners || [];
     for (var i = 0; i < st.seats.length; i++) {
       var p = st.seats[i];
       if (!p) continue;
-      results.push({ uid: p.uid, name: p.name, spent: p.committed + p.bet, chips: p.chips });
+      results.push({
+        id: p.uid, name: p.name, chips: p.chips,
+        won: winners.indexOf(i) >= 0,
+        played: p.committed + p.bet > 0
+      });
       p.bet = 0; p.committed = 0; p.folded = false; p.allIn = false; p.acted = false;
       if (p.chips <= 0) p.state = 'sitout';
-      else if (p.state === 'playing') p.state = 'playing';
+    }
+    st._winners = null;
+
+    // 申請離桌的人現在可以走了
+    for (i = 0; i < st.seats.length; i++) {
+      if (st.seats[i] && st.seats[i].leaveAfter) {
+        log(st, st.seats[i].name + ' 離開牌桌');
+        st.seats[i] = null;
+      }
     }
     st.hand.phase = 'idle';
     st.hand.turnSeat = -1;
     st.pots = [];
     st.pendingAward = null;
-    st.lastResults = results;
+    st.lastResults = { hand: st.hand.no, rows: results };
     st.deck = [];
     st.hole = {};   // 公牌和攤牌結果留到下一手開始前，讓大家看得到
+    fillFromQueue(st);
   }
 
   /* ---------- 給 UI 用的輔助 ---------- */
@@ -1343,7 +1299,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:26px}
 <script>
 (function(){
 'use strict';
-var BUILD = '0911-1556';
+var BUILD = '0913-0640';
 /* ================= Firebase ================= */
 var FB_CONFIG = {
   apiKey: "AIzaSyC1ypnHgPuhjoe6u7D-opVzQSZEgv9q34k",
@@ -1411,7 +1367,7 @@ function tryPassword(claimRef, pw) {
 
 
 /* ================= 特效 ================= */
-var FX = { muted: LS.get('muted', false), _ac: null, _potShown: 0 };
+var FX = { muted: true, _ac: null, _potShown: 0 };
 
 function ac() {
   if (!FX._ac) {
@@ -1522,6 +1478,9 @@ var LOOP = {
   autoLeft: 0,
   roster: [],
   dealtHand: -1,
+  statsHand: -1,
+  turnKey: null,
+  turnAt: 0,
   onState: function () {},
   onOwn: function () {}
 };
@@ -1535,6 +1494,42 @@ function loopInit(me, isAdmin, onState, onOwn) {
   LOOP.onOwn = onOwn || function () {};
   loadLoopRoster();
   setInterval(loadLoopRoster, 30000);
+  setInterval(checkTurnTimeout, 1000);
+}
+
+/* 還剩幾秒。給畫面用的，不是主機也算得出來 */
+function turnLeft() {
+  if (!LOOP.ST || LOOP.ST.hand.phase === 'idle' || LOOP.ST.hand.turnSeat < 0) return -1;
+  if (!LOOP.turnAt) return -1;
+  var limit = (LOOP.ST.settings.turnSec || 45) * 1000;
+  return Math.max(0, Math.ceil((limit - (Date.now() - LOOP.turnAt)) / 1000));
+}
+
+function turnKeyOf(st) {
+  return st.hand.no + ':' + st.hand.phase + ':' + st.hand.turnSeat + ':' + st.hand.currentBet;
+}
+
+/* 有人鎖屏或關掉分頁就會一直等他，時間到自動幫他過牌或蓋牌 */
+function checkTurnTimeout() {
+  var st = LOOP.ST;
+  if (!st || st.hand.phase === 'idle' || st.hand.turnSeat < 0) { LOOP.turnKey = null; return; }
+
+  var key = turnKeyOf(st);
+  if (key !== LOOP.turnKey) { LOOP.turnKey = key; LOOP.turnAt = Date.now(); return; }
+  if (!LOOP.own) return;
+
+  var limit = (st.settings.turnSec || 45) * 1000;
+  if (Date.now() - LOOP.turnAt < limit) return;
+  LOOP.turnAt = Date.now();
+
+  var seat = st.hand.turnSeat;
+  LOOP.queue = LOOP.queue.then(function () {
+    if (!LOOP.own || turnKeyOf(LOOP.ST) !== key) return;
+    var L = Engine.legalMoves(LOOP.ST, seat);
+    if (!L.fold && !L.check) return;
+    try { Engine.act(LOOP.ST, seat, L.check ? 'check' : 'fold'); } catch (e) { return; }
+    return loopFlush();
+  }).catch(function () {});
 }
 
 function loadLoopRoster() {
@@ -1552,8 +1547,8 @@ function loadLoopRoster() {
 function normalizeState(d) {
   return {
     status: d.status, settings: d.settings, seats: d.seats || [], hand: d.hand,
-    pots: d.pots || [], pendingAward: null, log: d.log || [],
-    board: d.board || [], reveal: d.reveal || null,
+    pots: d.pots || [], queue: d.queue || [], log: d.log || [],
+    board: d.board || [], reveal: d.reveal || null, lastResults: d.lastResults || null,
     deck: [], hole: {}
   };
 }
@@ -1626,20 +1621,38 @@ function setOwn(v) {
 }
 
 function enqueueAction(doc) {
-  LOOP.queue = LOOP.queue.then(function () {
+  var out = LOOP.queue.then(function () {
     var a = doc.data(), err = null;
-    try { applyAct(a); } catch (e) { err = e.message || String(e); }
-    var jobs = [doc.ref.delete().catch(function () {})];
-    if (err && a.id) {
-      jobs.push(TABLE.collection('errors').doc(String(a.id))
-        .set({ msg: err, at: FV.serverTimestamp() }).catch(function () {}));
-    } else if (!err) {
-      jobs.push(loopFlush());
-      if (a.type === 'join' || a.type === 'seat') jobs.push(loadLoopRoster());
+
+    if (err === null) {
+      try { applyAct(a); } catch (e) { err = e.message || String(e); }
     }
-    return Promise.all(jobs);
+
+    if (err) {
+      // 動作不合法：回報給本人，然後把它清掉
+      return (a.id
+        ? TABLE.collection('errors').doc(String(a.id))
+            .set({ msg: err, at: FV.serverTimestamp() }).catch(function () {})
+        : Promise.resolve()
+      ).then(function () { return doc.ref.delete().catch(function () {}); });
+    }
+
+    // 一定要先確定狀態寫得進去，才可以刪掉這筆動作。
+    // 順序反過來的話，租約被搶走時這筆動作會消失，輪次就卡死。
+    return loopFlush().then(function () {
+      if (a.type === 'join' || a.type === 'seat') loadLoopRoster();
+      return doc.ref.delete().catch(function () {});
+    }, function (e) {
+      // 寫不進去代表租約已經不是我的了，退出主機重新同步，動作留給下一台處理
+      delete LOOP.seen[doc.id];
+      setOwn(false);
+      return TABLE.get().then(function (d) {
+        if (d.exists) LOOP.ST = normalizeState(d.data());
+      }).catch(function () {});
+    });
   }).catch(function () {});
-  return LOOP.queue;
+  LOOP.queue = out;
+  return out;
 }
 
 function rosterOf(id) {
@@ -1706,14 +1719,15 @@ function applyAct(a) {
 
   switch (a.type) {
     case 'join':
-      if (seat >= 0) return;
-      if (st.settings.joinMode === 'hostOnly') throw new Error('主辦鎖住了自由入座');
       var r = rosterOf(a.id);
       if (r && r.blocked) throw new Error('你被移出這桌了，找主辦');
-      var free = -1;
-      for (var j = 0; j < st.seats.length; j++) if (!st.seats[j]) { free = j; break; }
-      if (free < 0) throw new Error('位子滿了');
-      seatWithChips(st, a.id, String(a.name || a.id).slice(0, 12), free);
+      var chips = (r && r.chips != null) ? r.chips : st.settings.startingChips;
+      if (chips <= 0) chips = st.settings.startingChips;
+      E.requestJoin(st, a.id, a.name || (r && r.name) || a.id, chips);
+      return;
+
+    case 'leave':
+      E.requestLeave(st, a.id);
       return;
 
     case 'sitout':
@@ -1736,8 +1750,8 @@ function loopFlush() {
 
   var jobs = [TABLE.set({
     status: st.status, settings: st.settings, seats: st.seats, hand: st.hand,
-    pots: st.pots || [], log: st.log || [],
-    board: st.board || [], reveal: st.reveal || null,
+    pots: st.pots || [], queue: st.queue || [], log: st.log || [],
+    board: st.board || [], reveal: st.reveal || null, lastResults: st.lastResults || null,
     leaseUid: uid, leaseOwner: LOOP.me, leaseAt: FV.serverTimestamp()
   }, { merge: true })];
 
@@ -1754,6 +1768,19 @@ function loopFlush() {
       var cards = (st.hole && st.hole[i]) ? st.hole[i] : [];
       jobs.push(HOLE.doc(String(p.uid)).set({ cards: cards, handNo: st.hand.no })
         .catch(function () {}));
+    });
+  }
+
+  // 一手打完，把籌碼和戰績寫回名單
+  if (st.lastResults && st.lastResults.hand !== LOOP.statsHand) {
+    LOOP.statsHand = st.lastResults.hand;
+    st.lastResults.rows.forEach(function (row) {
+      var r = rosterOf(row.id) || {};
+      var patch = { chips: row.chips };
+      if (row.chips > (r.peak || 0)) patch.peak = row.chips;
+      if (row.won) patch.wins = (r.wins || 0) + 1;
+      if (row.played) patch.hands = (r.hands || 0) + 1;
+      jobs.push(db.collection('roster').doc(String(row.id)).update(patch).catch(function () {}));
     });
   }
 
@@ -1835,7 +1862,7 @@ function admBoot() {
 function admLoadRoster() {
   return loadLoopRoster().then(function () {
     ADM.roster = LOOP.roster.slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; });
-    if ($('drawer').classList.contains('on')) renderDrawer();
+    if (TAB === 'settings') renderSettings();
   });
 }
 
@@ -1891,110 +1918,6 @@ function admOp(type, extra) {
   });
 }
 
-/* ---------- 抽屜裡的 HTML ---------- */
-function admHTML() {
-  if (!ADM.ready) return '';
-
-  if (!ADM.unlocked) {
-    return '<div class="sec">主辦</div>' +
-      '<div class="field"><label>' + (ADM.firstRun ? '設定主辦密碼' : '主辦密碼') + '</label>' +
-      '<input id="admPw" type="password" placeholder="' + (ADM.firstRun ? '至少 4 碼' : '輸入密碼') + '"></div>' +
-      (ADM.firstRun
-        ? '<div class="field"><label>再打一次確認</label><input id="admPw2" type="password"></div>'
-        : '') +
-      '<button class="btn ghost" id="admUnlockBtn">' + (ADM.firstRun ? '啟用主辦' : '解鎖') + '</button>' +
-      (ADM.firstRun ? '<p class="hint" style="margin-top:9px">別用生日或學號，班上猜得到。</p>' : '');
-  }
-
-  if (!ST) return '<div class="sec">主辦</div><p class="hint">牌桌還沒載入。</p>';
-  var st = ST, h = '<div class="sec">主辦 · 牌局</div>';
-
-  if (st.hand.phase === 'idle') {
-
-    h += '<div class="field"><label>指定莊家位（第一手用）</label><select id="admDealer"><option value="-1">自動輪莊</option>';
-    st.seats.forEach(function (p, i) {
-      if (p && p.state === 'playing' && p.chips > 0) {
-        h += '<option value="' + i + '">' + (i + 1) + ' 號 · ' + esc(p.name) + '</option>';
-      }
-    });
-    h += '</select></div>';
-    h += '<button class="btn" id="admStart">' +
-         (LOOP.autoLeft > 0 ? '立刻開始（' + LOOP.autoLeft + ' 秒）' : '開始下一手') + '</button>';
-  } else {
-    h += '<p class="hint">進行中 · ' + Engine.phaseName(st.hand.phase) + '</p>' +
-         '<button class="btn danger" style="margin-top:9px" id="admAbort">作廢這手，籌碼退回</button>';
-  }
-
-  /* 名單 */
-  h += '<div class="sec">主辦 · 名單</div>';
-  var seatedIds = [];
-  st.seats.forEach(function (p, i) {
-    if (!p) return;
-    seatedIds.push(String(p.uid));
-    var out = p.chips <= 0;
-    h += '<div class="prow' + (out ? ' out' : '') + '">' +
-      '<span class="id">' + esc(p.uid) + '</span>' +
-      '<span class="who"><b>' + esc(p.name) + '</b><small>' + (i + 1) + ' 號位' +
-      (out ? '　已出局' : p.state === 'sitout' ? '　暫離' : p.state === 'waiting' ? '　下一手加入' : '') +
-      '</small></span><span class="money">' + fmt(p.chips) + '</span>' +
-      '<button data-add="' + i + '">補</button>' +
-      '<button data-set="' + i + '">改</button>' +
-      '<button data-pw="' + i + '">碼</button>' +
-      '<button data-del="' + i + '">移</button></div>';
-  });
-  if (!seatedIds.length) h += '<p class="hint">桌上還沒有人。</p>';
-
-  var bench = ADM.roster.filter(function (r) { return seatedIds.indexOf(r.id) < 0; });
-  if (bench.length) {
-    h += '<p class="hint" style="margin:12px 0 4px">不在桌上</p>';
-    bench.forEach(function (r) {
-      h += '<div class="prow out"><span class="id">' + esc(r.id) + '</span>' +
-        '<span class="who"><b>' + esc(r.name) + '</b><small>' +
-        (r.chips != null ? '離桌時剩 ' + fmt(r.chips) : '還沒上過桌') + '</small></span>' +
-        '<button data-back="' + esc(r.id) + '">拉回桌</button></div>';
-    });
-  }
-
-  /* 設定 */
-  var S = st.settings;
-  h += '<div class="sec">主辦 · 設定</div>';
-  h += '<div class="row"><div class="field"><label>小盲</label><input id="admSb" type="number" value="' + S.sb + '"></div>' +
-       '<div class="field"><label>大盲</label><input id="admBb" type="number" value="' + S.bb + '"></div></div>';
-  h += '<div class="row"><div class="field"><label>起始／補碼</label><input id="admStack" type="number" value="' + S.startingChips + '"></div>' +
-       '<div class="field"><label>座位數</label><select id="admSeats">';
-  [2, 4, 6, 8, 9, 10].forEach(function (n) {
-    h += '<option value="' + n + '"' + (st.seats.length === n ? ' selected' : '') + '>' + n + '</option>';
-  });
-  h += '</select></div></div>';
-  h += '<div class="row"><div class="field"><label>一手打完</label><select id="admAuto">' +
-       '<option value="1"' + (S.autoNext !== false ? ' selected' : '') + '>自動開下一手</option>' +
-       '<option value="0"' + (S.autoNext === false ? ' selected' : '') + '>停下來等我按</option></select></div>' +
-       '<div class="field"><label>間隔秒數</label><input id="admDelay" type="number" value="' + (S.autoDelay || 6) + '"></div></div>';
-  h += '<button class="btn ghost" id="admSave">儲存設定</button>';
-
-  /* 診斷 */
-  var H = st.hand;
-  h += '<div class="sec">主辦 · 診斷</div>';
-  h += '<div class="diagline">階段 <b>' + Engine.phaseName(H.phase) + '</b>　注額 <b>' + fmt(H.currentBet) +
-       '</b>　最小加注 <b>' + fmt(H.minRaise) + '</b></div>';
-  h += '<div class="diagline">小盲 ' + (H.sbSeat + 1) + '　大盲 ' + (H.bbSeat + 1) +
-       '　輪到 <b>' + (H.turnSeat >= 0 && st.seats[H.turnSeat] ? esc(st.seats[H.turnSeat].name) : '無') + '</b></div>';
-  h += '<div class="diagline">主機 <b>' + (LOOP.own ? '這台' : '別人的裝置') + '</b></div>';
-  st.seats.forEach(function (p, i) {
-    if (!p) return;
-    var f = [];
-    if (p.folded) f.push('蓋');
-    if (p.allIn) f.push('全下');
-    if (p.state !== 'playing') f.push(p.state === 'sitout' ? '暫離' : '等下手');
-    f.push(p.acted ? '已動作' : '未動作');
-    h += '<div class="diagline' + (H.turnSeat === i ? ' hot' : '') + '">' + (i + 1) + ' ' + esc(p.name) +
-         '　本街 ' + fmt(p.bet) + '　本手 ' + fmt(p.committed) + '　' + f.join('/') + '</div>';
-  });
-
-  h += '<button class="btn ghost" style="margin-top:14px" id="admLock">鎖回去</button>';
-  return h;
-}
-
 /* ---------- 綁事件 ---------- */
 function admBind() {
   if (!ADM.ready) return;
@@ -2003,43 +1926,26 @@ function admBind() {
     $('admUnlockBtn').onclick = function () {
       var b = this; b.disabled = true;
       admUnlock($('admPw').value, $('admPw2') ? $('admPw2').value : null)
-        .then(function () { toast('主辦功能解開了'); renderDrawer(); })
+        .then(function () { toast('解開了'); renderSettings(); })
         .catch(function (e) { b.disabled = false; toast(e.message || '解不開', 'bad'); });
     };
-    return;
   }
   if (!ADM.unlocked) return;
 
   if ($('admLock')) $('admLock').onclick = function () {
-    ADM.unlocked = false; LOOP.isAdmin = false; renderDrawer();
+    ADM.unlocked = false; LOOP.isAdmin = false; renderSettings();
   };
 
   if ($('admStart')) $('admStart').onclick = function () {
     clearAutoNext();
-    admOp('start', { seat: +$('admDealer').value }).catch(function () {});
+    admOp('start', { seat: -1 }).catch(function () {});
   };
 
   if ($('admAbort')) $('admAbort').onclick = function () {
     if (confirm('作廢這一手？所有人下的注原數退回。')) admOp('abort').catch(function () {});
   };
 
-  if ($('admSave')) $('admSave').onclick = function () {
-    var sb = Math.max(1, +$('admSb').value);
-    var bb = Math.max(sb + 1, +$('admBb').value);
-    var seatCount = +$('admSeats').value;
-    for (var i = seatCount; i < ST.seats.length; i++) {
-      if (ST.seats[i]) return toast('第 ' + (i + 1) + ' 號位還有人，先移除', 'bad');
-    }
-    admOp('settings', { settings: {
-      sb: sb, bb: bb,
-      startingChips: Math.max(bb, +$('admStack').value),
-      autoNext: $('admAuto').value === '1',
-      autoDelay: Math.max(2, Math.min(60, +$('admDelay').value || 6)),
-      seatCount: seatCount
-    } }).then(function () { toast('設定已儲存，下一手生效'); }).catch(function () {});
-  };
-
-  var root = $('drawerInner');
+  var root = $('setPane');
 
   Array.prototype.slice.call(root.querySelectorAll('[data-add]')).forEach(function (b) {
     b.onclick = function () {
@@ -2114,13 +2020,182 @@ function admBind() {
   });
 }
 
+/* settings.js — 設定分頁 */
 
-/* ================= 前台 ================= */
-var myId = null, ST = null, mySeat = -1, raiseOpen = false, unsubs = [];
+function renderSettings() {
+  var h = '';
 
-/* ---------- 註冊 / 登入 ---------- */
-var myName = '', isNew = false, myHole = [], myHoleHand = -1;
+  if (!ADM.ready) { paint('setPane', '<div class="empty">載入中…</div>'); return; }
 
+  if (!ADM.unlocked) {
+    h += '<div class="grp"><div class="grp-h">主辦</div><div class="grp-b">' +
+      '<div class="ios-row"><span>' + (ADM.firstRun ? '設定主辦密碼' : '主辦密碼') + '</span>' +
+      '<input id="admPw" type="password" placeholder="' + (ADM.firstRun ? '至少 4 碼' : '輸入密碼') + '"></div>' +
+      (ADM.firstRun ? '<div class="ios-row"><span>再打一次</span><input id="admPw2" type="password"></div>' : '') +
+      '</div></div>';
+    h += '<button class="btn" id="admUnlockBtn">' + (ADM.firstRun ? '啟用' : '解鎖') + '</button>';
+    h += '<p class="note">只有主辦需要進來，一般玩家不用管這頁。</p>';
+    if (!paint('setPane', h)) return;
+    admBind();
+    return;
+  }
+
+  if (!ST) { paint('setPane', '<div class="empty">牌桌還沒載入</div>'); return; }
+  var st = ST, S = st.settings;
+
+  /* 牌局 */
+  h += '<div class="grp"><div class="grp-h">牌局</div><div class="grp-b">';
+  h += '<div class="ios-row"><span>狀態</span><b>' +
+       (st.hand.phase === 'idle' ? '等待開牌' : Engine.phaseName(st.hand.phase)) + '</b></div>';
+  h += '<div class="ios-row"><span>主機</span><b>' + (LOOP.own ? '這台裝置' : '別人的裝置') + '</b></div>';
+  h += '<div class="ios-row"><span>候補</span><b>' + ((st.queue || []).length) + ' 人</b></div>';
+  h += '</div></div>';
+  h += st.hand.phase === 'idle'
+    ? '<button class="btn" id="admStart">' +
+      (LOOP.autoLeft > 0 ? '立刻開始（' + LOOP.autoLeft + '）' : '開始下一手') + '</button>'
+    : '<button class="btn danger" id="admAbort">作廢這手，籌碼退回</button>';
+
+  /* 名單 */
+  h += '<div class="grp"><div class="grp-h">名單</div><div class="grp-b">';
+  var seated = [];
+  st.seats.forEach(function (p, i) {
+    if (!p) return;
+    seated.push(String(p.uid));
+    h += '<div class="ios-row tall"><span class="pl">' +
+      '<b>' + esc(p.name) + '</b><em>#' + esc(p.uid) + '　' + (i + 1) + ' 號位</em></span>' +
+      '<span class="money">' + fmt(p.chips) + '</span>' +
+      '<span class="acts"><button data-add="' + i + '">補</button>' +
+      '<button data-set="' + i + '">改</button>' +
+      '<button data-pw="' + i + '">碼</button>' +
+      '<button data-del="' + i + '">移</button></span></div>';
+  });
+  ADM.roster.filter(function (r) { return seated.indexOf(r.id) < 0; }).forEach(function (r) {
+    h += '<div class="ios-row tall off"><span class="pl">' +
+      '<b>' + esc(r.name) + '</b><em>#' + esc(r.id) + '　不在桌上</em></span>' +
+      '<span class="money">' + fmt(r.chips) + '</span>' +
+      '<span class="acts"><button data-rpw="' + esc(r.id) + '">碼</button></span></div>';
+  });
+  h += '</div></div>';
+
+  /* 設定 */
+  h += '<div class="grp"><div class="grp-h">規則</div><div class="grp-b">';
+  h += row('小盲', '<input id="admSb" type="number" value="' + S.sb + '">');
+  h += row('大盲', '<input id="admBb" type="number" value="' + S.bb + '">');
+  h += row('起始／補碼', '<input id="admStack" type="number" value="' + S.startingChips + '">');
+  h += row('座位數', sel('admSeats', [2, 4, 6, 8, 9, 10], st.seats.length));
+  h += row('思考秒數', '<input id="admTurn" type="number" value="' + (S.turnSec || 45) + '">');
+  h += row('一手打完', '<select id="admAuto"><option value="1"' +
+       (S.autoNext !== false ? ' selected' : '') + '>自動開下一手</option><option value="0"' +
+       (S.autoNext === false ? ' selected' : '') + '>等我按</option></select>');
+  h += row('間隔秒數', '<input id="admDelay" type="number" value="' + (S.autoDelay || 6) + '">');
+  h += '</div></div>';
+  h += '<button class="btn ghost" id="admSave">儲存規則</button>';
+
+  /* 診斷 */
+  var H = st.hand;
+  h += '<div class="grp"><div class="grp-h">診斷</div><div class="grp-b diag">';
+  h += '<div>注額 ' + fmt(H.currentBet) + '　最小加注 ' + fmt(H.minRaise) +
+       '　小盲 ' + (H.sbSeat + 1) + '　大盲 ' + (H.bbSeat + 1) + '</div>';
+  st.seats.forEach(function (p, i) {
+    if (!p) return;
+    var f = [];
+    if (p.folded) f.push('蓋');
+    if (p.allIn) f.push('全下');
+    if (p.leaveAfter) f.push('待離');
+    if (p.state !== 'playing') f.push(p.state === 'sitout' ? '暫離' : '等下手');
+    f.push(p.acted ? '已動作' : '未動作');
+    h += '<div' + (H.turnSeat === i ? ' class="hot"' : '') + '>' + (i + 1) + ' ' + esc(p.name) +
+         '　本街 ' + fmt(p.bet) + '　本手 ' + fmt(p.committed) + '　' + f.join('/') + '</div>';
+  });
+  h += '</div></div>';
+
+  h += '<div class="grp"><div class="grp-h">紀錄</div><div class="grp-b logbox">' +
+       (st.log || []).slice().reverse().map(function (l) { return esc(l.text); }).join('<br>') +
+       '</div></div>';
+
+  h += '<button class="btn ghost" id="admLock">鎖回去</button>';
+  h += '<button class="btn danger" style="margin-top:10px" id="doLogout">登出</button>';
+
+  if (!paint('setPane', h)) return;
+  admBind();
+  bindSettingsExtra();
+}
+
+function row(label, input) {
+  return '<div class="ios-row"><span>' + label + '</span>' + input + '</div>';
+}
+function sel(id, opts, cur) {
+  return '<select id="' + id + '">' + opts.map(function (n) {
+    return '<option value="' + n + '"' + (n === cur ? ' selected' : '') + '>' + n + '</option>';
+  }).join('') + '</select>';
+}
+
+function bindSettingsExtra() {
+  if ($('doLogout')) $('doLogout').onclick = function () {
+    auth.signOut().then(function () { location.reload(); });
+  };
+  if ($('admTurn')) {
+    var save = $('admSave');
+    if (save) {
+      save.onclick = function () {
+        var sb = Math.max(1, +$('admSb').value);
+        var bb = Math.max(sb + 1, +$('admBb').value);
+        var seatCount = +$('admSeats').value;
+        for (var i = seatCount; i < ST.seats.length; i++) {
+          if (ST.seats[i]) return toast('第 ' + (i + 1) + ' 號位還有人，先移除', 'bad');
+        }
+        admOp('settings', { settings: {
+          sb: sb, bb: bb,
+          startingChips: Math.max(bb, +$('admStack').value),
+          turnSec: Math.max(10, Math.min(180, +$('admTurn').value || 45)),
+          autoNext: $('admAuto').value === '1',
+          autoDelay: Math.max(2, Math.min(60, +$('admDelay').value || 6)),
+          seatCount: seatCount
+        } }).then(function () { toast('已儲存，下一手生效'); }).catch(function () {});
+      };
+    }
+  }
+  Array.prototype.slice.call($('setPane').querySelectorAll('[data-rpw]')).forEach(function (b) {
+    b.onclick = function () { editPw(b.getAttribute('data-rpw')); };
+  });
+}
+
+function editPw(id) {
+  var ref = db.collection('roster').doc(String(id)).collection('private').doc('pw');
+  ref.get().then(function (s) {
+    var cur = s.exists ? s.data().pw : null;
+    var v = prompt(cur === null ? '這個編號還沒設過密碼，要指定一組嗎？'
+      : '目前密碼：' + cur + '\n\n要改就打新的，留空取消。', cur || '');
+    if (!v) return;
+    return ref.set({ pw: v })
+      .then(function () { return db.collection('roster').doc(String(id)).collection('claims').get(); })
+      .then(function (q) {
+        var jobs = [];
+        q.forEach(function (d) { jobs.push(d.ref.delete().catch(function () {})); });
+        return Promise.all(jobs);
+      })
+      .then(function () { toast('密碼改成 ' + v + '，他要重新登入'); });
+  }).catch(function () { toast('讀不到密碼', 'bad'); });
+}
+
+
+/* app.js — 登入、三個分頁、牌桌、設定 */
+
+var myId = null, myName = '', isNew = false;
+var ST = null, mySeat = -1, myHole = [], myHoleHand = -1;
+var ROSTER = [], TAB = 'home', raiseOpen = false, unsubs = [];
+var _paint = {};
+
+function paint(id, html) {
+  if (_paint[id] === html) return false;
+  _paint[id] = html;
+  var el = $(id);
+  if (!el) return false;
+  el.innerHTML = html;
+  return true;
+}
+
+/* ================= 登入 ================= */
 $('pid').addEventListener('input', function () {
   var v = this.value.replace(/\D/g, '').slice(0, 2);
   this.value = v;
@@ -2129,21 +2204,13 @@ $('pid').addEventListener('input', function () {
 
 function setMode(reg, name) {
   isNew = reg === true;
-  var lab = $('pwLabel'), hint = $('gateHint'), btn = $('loginBtn');
   $('nameWrap').style.display = reg === true ? '' : 'none';
-  if (reg === null) {
-    lab.textContent = '密碼';
-    hint.textContent = '打一組沒人用過的兩位數編號就能註冊。';
-    btn.textContent = '進入牌桌';
-  } else if (reg) {
-    lab.textContent = '設一組密碼';
-    hint.textContent = '這個編號還沒人用，填完就是你的。之後登入都用這組。';
-    btn.textContent = '註冊並入座';
-  } else {
-    lab.textContent = '密碼';
-    hint.textContent = '這個編號是「' + name + '」，打你設過的密碼。';
-    btn.textContent = '進入牌桌';
-  }
+  $('pwLabel').textContent = reg === true ? '設一組密碼' : '密碼';
+  $('gateHint').textContent =
+    reg === null ? '打一組沒人用過的兩位數編號就能註冊。'
+    : reg ? '這個編號還沒人用，填完就是你的。'
+    : '這個編號是「' + name + '」，打你設過的密碼。';
+  $('loginBtn').textContent = reg === true ? '註冊' : '進入';
 }
 
 function lookup(id) {
@@ -2162,47 +2229,58 @@ $('loginBtn').addEventListener('click', function () {
   if (isNew && !nm) return toast('要填名字', 'bad');
 
   var btn = this; btn.disabled = true;
-  var rosterRef = db.collection('roster').doc(id);
-  var pwRef = rosterRef.collection('private').doc('pw');
-  var claimRef = rosterRef.collection('claims').doc(uid);
+  var rRef = db.collection('roster').doc(id);
+  var claim = rRef.collection('claims').doc(uid);
 
-  var step;
-  if (isNew) {
-    step = rosterRef.set({ name: nm })
-      .then(function () { return pwRef.set({ pw: pw }); })
-      .then(function () { return tryPassword(claimRef, pw); })
-      .then(function () { myName = nm; });
-  } else {
-    step = rosterRef.get().then(function (s) {
-      if (!s.exists) throw { code: 'gone' };
-      myName = s.data().name || id;
-      return tryPassword(claimRef, pw).catch(function () { throw { code: 'bad-pw' }; });
-    });
-  }
+  var step = isNew
+    ? rRef.set({ name: nm, chips: 1500, peak: 1500, wins: 0, hands: 0 })
+        .then(function () { return rRef.collection('private').doc('pw').set({ pw: pw }); })
+        .then(function () { return claim.set({ pw: pw, at: FV.serverTimestamp() }); })
+        .then(function () { myName = nm; })
+    : rRef.get().then(function (s) {
+        if (!s.exists) throw { code: 'gone' };
+        myName = s.data().name || id;
+        return claim.set({ pw: pw, at: FV.serverTimestamp() })
+          .catch(function () { throw { code: 'bad' }; });
+      });
 
   step.then(function () {
     myId = id;
     LS.set('lastId', id);
-    startTable();
-    admBoot();
-    return send('join', { name: myName });
+    boot();
   }).catch(function (e) {
     btn.disabled = false;
-    if (e && e.code === 'bad-pw') toast('密碼不對', 'bad');
-    else if (e && e.code === 'gone') toast('這個編號不見了，重新整理看看', 'bad');
-    else toast('進不去：' + (e && (e.code || e.message) ? (e.code || e.message) : '不明錯誤'), 'bad');
+    toast(e && e.code === 'bad' ? '密碼不對'
+        : e && e.code === 'gone' ? '這個編號不見了'
+        : '進不去：' + ((e && (e.code || e.message)) || '不明'), 'bad');
   });
 });
 
 $('pid').value = LS.get('lastId', '');
-if ($('pid').value.length === 2) lookup($('pid').value);
 
-/* ---------- 進桌 ---------- */
-function startTable() {
-  $('gateView').style.display = 'none';
-  $('tableView').style.display = '';
-  $('whoami').textContent = '編號 ' + myId;
+/* ================= 啟動 ================= */
+function boot() {
+  $('gate').style.display = 'none';
+  $('app').style.display = '';
+  $('topWho').textContent = myName + '　' + myId;
   $('topBuild').textContent = BUILD;
+
+  loopInit(myId, false, function () { ST = LOOP.ST; render(); }, function () { render(); });
+  admBoot();
+
+  unsubs.push(db.collection('roster').onSnapshot(function (q) {
+    ROSTER = [];
+    q.forEach(function (d) {
+      var x = d.data();
+      ROSTER.push({
+        id: d.id, name: x.name || d.id,
+        chips: x.chips || 0, peak: x.peak || 0,
+        wins: x.wins || 0, hands: x.hands || 0
+      });
+    });
+    LOOP.roster = ROSTER;
+    render();
+  }, function () {}));
 
   unsubs.push(TABLE.collection('hole').doc(myId).onSnapshot(function (d) {
     myHole = d.exists ? (d.data().cards || []) : [];
@@ -2210,89 +2288,138 @@ function startTable() {
     render();
   }, function () {}));
 
-  unsubs.push(db.collection('tables').doc('main').collection('errors').doc(myId)
-    .onSnapshot(function (s) {
-      if (s.exists && s.data().msg) { toast(s.data().msg, 'bad'); s.ref.delete().catch(function () {}); }
-    }, function () {}));
-
-  loopInit(myId, ADM.unlocked, function () { ST = LOOP.ST; render(); }, function () { render(); });
+  unsubs.push(TABLE.collection('errors').doc(myId).onSnapshot(function (d) {
+    if (d.exists && d.data().msg) { toast(d.data().msg, 'bad'); d.ref.delete().catch(function () {}); }
+  }, function () {}));
 
   unsubs.push(TABLE.onSnapshot(function (snap) {
-    if (!snap.exists) { ensureTableExists(); return; }
-    var d = snap.data();
-    loopOnSnapshot(d);
+    if (!snap.exists) { makeTable(); return; }
+    loopOnSnapshot(snap.data());
     ST = LOOP.ST;
-    mySeat = Engine.seatOf(ST, myId);
     render();
-    maybeAutoNext(function () { renderActions(); });
+    maybeAutoNext(function () { renderTable(); });
   }, function (e) { toast('連線問題：' + e.code, 'bad'); }));
+
+  setInterval(function () { if (TAB === 'table') renderTable(); }, 1000);
 }
 
-var _creating = false;
-function ensureTableExists() {
-  if (_creating) return;
-  _creating = true;
+var _making = false;
+function makeTable() {
+  if (_making) return;
+  _making = true;
   var st = Engine.newRoom(Engine.defaultSettings());
   st.settings.startingChips = 1500;
   TABLE.set({
     status: st.status, settings: st.settings, seats: st.seats, hand: st.hand,
-    pots: [], pendingAward: null, log: [],
+    pots: [], queue: [], board: [], reveal: null, log: [],
     leaseUid: uid, leaseOwner: myId, leaseAt: FV.serverTimestamp()
-  }).then(function () { toast('牌桌開好了'); })
-    .catch(function (e) { toast('開不了牌桌：' + (e.code || e.message), 'bad'); })
-    .then(function () { _creating = false; });
+  }).catch(function (e) { toast('開不了牌桌：' + e.code, 'bad'); })
+    .then(function () { _making = false; });
 }
 
 function send(type, extra) {
-  return sendAct(type, extra, false)
-    .catch(function (e) { toast('送不出去：' + e.code, 'bad'); });
-}
-
-/* ---------- 畫面 ---------- */
-var _lastChips = null, _lastHandNo = 0;
-var _lastHTML = {};
-function paint(id, html) {
-  if (_lastHTML[id] === html) return false;
-  _lastHTML[id] = html;
-  $(id).innerHTML = html;
-  return true;
-}
-
-function render() {
-  if (!ST) return;
-  turnAlert(ST.hand.turnSeat >= 0 && ST.hand.turnSeat === mySeat);
-  var me = mySeat >= 0 ? ST.seats[mySeat] : null;
-  if (me) {
-    if (_lastChips !== null && ST.hand.no === _lastHandNo &&
-        ST.hand.phase === 'idle' && me.chips > _lastChips) burst();
-    _lastChips = me.chips;
-    _lastHandNo = ST.hand.no;
-  }
-  renderMyBar();
-  renderSeats();
-  renderCenter();
-  renderActions();
-  if ($('drawer').classList.contains('on') && !drawerBusy()) renderDrawer();
-}
-
-function renderMyBar() {
-  var me = mySeat >= 0 ? ST.seats[mySeat] : null;
-  $('mySeatNo').textContent = mySeat >= 0 ? (mySeat + 1) + ' 號' : '—';
-  $('myChips').textContent = me ? fmt(me.chips) : '—';
-
-  ['bb', 'sb'].forEach(function (w) {
-    var el = $(w + 'In');
-    var n = me ? Engine.handsUntil(ST, mySeat, w) : -1;
-    el.className = 'v small';
-    if (n < 0) { el.textContent = '—'; return; }
-    if (n === 0) { el.textContent = '就是這手'; el.className = 'v small now'; }
-    else if (n === 1) el.textContent = '下一手';
-    else el.textContent = '再 ' + n + ' 手';
+  return sendAct(type, extra, false).catch(function (e) {
+    toast('送不出去：' + e.code, 'bad');
   });
 }
 
-var _shown = 0;
+/* ================= 分頁 ================= */
+Array.prototype.slice.call(document.querySelectorAll('.tabs button')).forEach(function (b) {
+  b.addEventListener('click', function () {
+    TAB = b.getAttribute('data-tab');
+    Array.prototype.slice.call(document.querySelectorAll('.tabs button')).forEach(function (x) {
+      x.classList.toggle('on', x === b);
+    });
+    ['home', 'table', 'set'].forEach(function (k) {
+      $(k + 'Pane').style.display = (k === TAB || (k === 'set' && TAB === 'settings')) ? '' : 'none';
+    });
+    $('tablePane').style.display = TAB === 'table' ? '' : 'none';
+    render();
+  });
+});
 
+function render() {
+  // 座位號每次重繪都要重算，不然離桌或被搬位之後會指到空位
+  mySeat = ST ? Engine.seatOf(ST, myId) : -1;
+  if (TAB === 'home') renderHome();
+  else if (TAB === 'table') renderTable();
+  else renderSettings();
+}
+
+/* ================= 主畫面 ================= */
+function me() {
+  for (var i = 0; i < ROSTER.length; i++) if (ROSTER[i].id === myId) return ROSTER[i];
+  return { id: myId, name: myName, chips: 0, peak: 0, wins: 0, hands: 0 };
+}
+
+function liveChips(id) {
+  if (ST) {
+    for (var i = 0; i < ST.seats.length; i++) {
+      if (ST.seats[i] && ST.seats[i].uid === id) return ST.seats[i].chips;
+    }
+  }
+  for (var k = 0; k < ROSTER.length; k++) if (ROSTER[k].id === id) return ROSTER[k].chips;
+  return 0;
+}
+
+function board(title, sub, rows, unit) {
+  var h = '<div class="lb"><div class="lb-h">' + title + '<em>' + sub + '</em></div>';
+  if (!rows.length) h += '<div class="lb-empty">還沒有資料</div>';
+  rows.slice(0, 5).forEach(function (r, i) {
+    h += '<div class="lb-row' + (r.id === myId ? ' me' : '') + '">' +
+      '<span class="rk r' + (i + 1) + '">' + (i + 1) + '</span>' +
+      '<span class="nm">' + esc(r.name) + '</span>' +
+      '<span class="vl">' + fmt(r.v) + (unit || '') + '</span></div>';
+  });
+  return h + '</div>';
+}
+
+function renderHome() {
+  var m = me(), cur = liveChips(myId);
+  var h = '<div class="hero">' +
+    '<div class="hero-name">' + esc(m.name) + '<em>#' + m.id + '</em></div>' +
+    '<div class="hero-chips">' + fmt(cur) + '</div>' +
+    '<div class="hero-sub">目前持有</div>' +
+    '<div class="hero-grid">' +
+      '<div><b>' + fmt(m.peak) + '</b><span>歷史最高</span></div>' +
+      '<div><b>' + fmt(m.wins) + '</b><span>贏過幾局</span></div>' +
+      '<div><b>' + fmt(m.hands) + '</b><span>打過幾手</span></div>' +
+    '</div></div>';
+
+  var byPeak = ROSTER.map(function (r) { return { id: r.id, name: r.name, v: r.peak }; })
+    .sort(function (a, b) { return b.v - a.v; });
+  var byNow = ROSTER.map(function (r) { return { id: r.id, name: r.name, v: liveChips(r.id) }; })
+    .sort(function (a, b) { return b.v - a.v; });
+  var byWin = ROSTER.map(function (r) { return { id: r.id, name: r.name, v: r.wins }; })
+    .sort(function (a, b) { return b.v - a.v; });
+
+  h += board('歷史最高', '這輩子最多拿到多少', byPeak);
+  h += board('目前持有', '現在手上的籌碼', byNow);
+  h += board('勝場', '贏過幾局牌', byWin, ' 局');
+
+  paint('homePane', h);
+}
+
+/* ================= 牌桌 ================= */
+function renderTable() {
+  if (!ST) { paint('tableWrap', '<div class="empty">牌桌載入中…</div>'); return; }
+  renderSeats();
+  renderCenter();
+  renderBar();
+}
+
+function renderCenter() {
+  var total = Engine.potTotal(ST);
+  setPot(total);
+  renderBoard();
+  var ph = ST.hand.phase === 'idle' ? '等待開牌' : Engine.phaseName(ST.hand.phase);
+  paint('phase', ph);
+  paint('sidepots', (ST.pots && ST.pots.length > 1)
+    ? ST.pots.map(function (p, i) { return (i === 0 ? '主池' : '邊池' + i) + ' ' + fmt(p.amount); }).join('　')
+    : '');
+}
+
+var _shownBoard = 0;
 function cardHTML(c, extra) {
   if (c === null || c === undefined) return '<div class="c"></div>';
   return '<div class="c up' + (Cards.isRed(c) ? ' red' : '') + '"' + (extra || '') + '>' +
@@ -2300,175 +2427,163 @@ function cardHTML(c, extra) {
 }
 
 function renderBoard() {
-  var el = $('board');
-  if (!el) return;
-  var b = ST.board || [];
-  if (_shown === b.length && el.childElementCount === 5) return;
+  var el = $('board'), b = ST.board || [];
+  if (_shownBoard === b.length && el.childElementCount === 5) return;
   var h = '';
   for (var i = 0; i < 5; i++) {
-    var fresh = i < b.length && i >= _shown;
     h += i < b.length
-      ? cardHTML(b[i], fresh ? ' style="animation-delay:' + ((i - _shown) * 110) + 'ms"' : '')
+      ? cardHTML(b[i], i >= _shownBoard ? ' style="animation-delay:' + ((i - _shownBoard) * 110) + 'ms"' : '')
       : '<div class="c"></div>';
   }
-  if (b.length > _shown) SFX.chip();
-  _shown = b.length;
+  _shownBoard = b.length;
   el.innerHTML = h;
-}
-
-function renderCenter() {
-  renderBoard();
-  var total = Engine.potTotal(ST);
-  setPot(total);
-  setStack(total, ST.settings.bb);
-
-  $('phase').textContent = ST.hand.phase === 'idle' ? '等待開牌' : Engine.phaseName(ST.hand.phase);
-  $('sidepots').textContent = (ST.pots && ST.pots.length > 1)
-    ? ST.pots.map(function (p, i) { return (i === 0 ? '主池' : '邊池' + i) + ' ' + fmt(p.amount); }).join('　')
-    : '';
 }
 
 function seatsKey() {
   return JSON.stringify([ST.seats, ST.hand.turnSeat, ST.hand.sbSeat, ST.hand.bbSeat,
-                         ST.hand.phase, ST.reveal, mySeat, window.innerWidth, window.innerHeight]);
+    ST.hand.phase, ST.reveal, mySeat, $('felt').clientWidth, $('felt').clientHeight]);
 }
 
 function renderSeats(force) {
   var key = seatsKey();
-  if (!force && _lastHTML.__seats === key) return;
-  _lastHTML.__seats = key;
+  if (!force && _paint.__seats === key) return;
+  _paint.__seats = key;
 
   var felt = $('felt');
   Array.prototype.slice.call(felt.querySelectorAll('.seat')).forEach(function (n) { n.remove(); });
 
   var n = ST.seats.length;
   var W = felt.clientWidth || 320, H = felt.clientHeight || 380;
-
-  // 依照實際寬度和人數決定卡片大小，人多就縮小，不讓相鄰的疊到
   var perSide = Math.max(3, Math.ceil(n / 2));
   var w = Math.max(50, Math.min(92, (W - 18) / (perSide * 1.02)));
   var cardH = w * 0.68;
-
-  // 橢圓半徑用像素算再換成百分比，確保卡片整個留在桌面裡
   var rx = ((W / 2) - (w / 2) - 2) / (W / 2) * 50;
   var ry = ((H / 2) - (cardH / 2) - 2) / (H / 2) * 50;
-
   var base = mySeat >= 0 ? mySeat : 0;
+
   for (var i = 0; i < n; i++) {
     var d = ((i - base) % n + n) % n;
     var th = (90 + d * 360 / n) * Math.PI / 180;
-    var el = seatNode(i, 50 + rx * Math.cos(th), 50 + ry * Math.sin(th));
+    var el = seatNode(i);
+    el.style.left = (50 + rx * Math.cos(th)) + '%';
+    el.style.top = (50 + ry * Math.sin(th)) + '%';
     el.style.width = Math.round(w) + 'px';
-    el.style.fontSize = (w < 66 ? 0.86 : 1) + 'em';
     felt.appendChild(el);
   }
-
-  // 中間那塊留出左右兩張卡的寬度，才不會被壓到
-  var c = felt.querySelector('.center');
-  if (c) c.style.width = Math.max(120, W - w * 2 - 22) + 'px';
 }
 
-function seatNode(i, x, y) {
+function seatNode(i) {
   var p = ST.seats[i];
   var el = document.createElement('div');
   el.className = 'seat' + (p ? '' : ' empty') +
     (p && p.folded ? ' folded' : '') +
     (ST.hand.turnSeat === i ? ' turn' : '') +
     (i === mySeat ? ' me' : '');
-  el.style.left = x + '%';
-  el.style.top = y + '%';
 
-  var inner = '<div class="card">';
-  if (!p) {
-    inner += '<div class="nm" style="color:var(--ash)">空位</div><div class="st">' + (i + 1) + ' 號</div>';
-  } else {
-    inner += '<div class="nm">' + esc(p.name) + '</div><div class="ch">' + fmt(p.chips) + '</div>';
-    if (p.allIn) inner += '<div class="allin">ALL IN</div>';
-    else if (p.chips <= 0 && p.state === 'sitout') inner += '<div class="allin">出局</div>';
-    else if (p.state === 'sitout') inner += '<div class="st">暫離</div>';
-    else if (p.state === 'waiting') inner += '<div class="st">下一手</div>';
-    else if (p.folded) inner += '<div class="st">已蓋牌</div>';
+  var h = '<div class="card">';
+  if (!p) h += '<div class="nm dim">空位</div><div class="st">' + (i + 1) + '</div>';
+  else {
+    h += '<div class="nm">' + esc(p.name) + '</div><div class="ch">' + fmt(p.chips) + '</div>';
+    if (p.allIn) h += '<div class="allin">ALL IN</div>';
+    else if (p.leaveAfter) h += '<div class="st">這手後離開</div>';
+    else if (p.chips <= 0 && p.state === 'sitout') h += '<div class="allin">出局</div>';
+    else if (p.state === 'waiting') h += '<div class="st">下一手</div>';
+    else if (p.folded) h += '<div class="st">已蓋牌</div>';
   }
-  inner += '</div>';
+  h += '</div>';
+
   var rv = ST.reveal && ST.reveal[i];
   if (rv) {
-    inner += '<div class="mini">' + rv.hole.map(function (c) { return cardHTML(c); }).join('') + '</div>';
-    inner += '<div class="hand-name">' + esc(rv.name) + '</div>';
+    h += '<div class="mini">' + rv.hole.map(function (c) { return cardHTML(c); }).join('') + '</div>';
+    h += '<div class="hand-name">' + esc(rv.name) + '</div>';
   }
-  if (p && p.bet > 0) inner += '<div class="bet">' + fmt(p.bet) + '</div>';
+  if (p && p.bet > 0) h += '<div class="bet">' + fmt(p.bet) + '</div>';
   var tag = Engine.positionLabel(ST, i);
-  if (tag) inner += '<div class="tag">' + tag + '</div>';
-  el.innerHTML = inner;
+  if (tag) h += '<div class="tag">' + tag + '</div>';
+  el.innerHTML = h;
   return el;
 }
 
-/* ---------- 動作列 ---------- */
-function renderMyCards() {
-  var el = $('myCards');
-  if (!el) return;
-  var live = myHole.length === 2 && ST && myHoleHand === ST.hand.no && ST.hand.phase !== 'idle';
-  el.innerHTML = live
-    ? '<span class="lbl">你的牌</span>' + myHole.map(function (c) { return cardHTML(c); }).join('')
-    : '';
-  el.style.display = live ? '' : 'none';
-}
+/* ---------- 下方操作區 ---------- */
+function renderBar() {
+  var bar = $('bar');
+  var qp = Engine.queuePos(ST, myId);
 
-function renderActions() {
-  renderMyCards();
-  var row = $('actRow'), box = $('raiseBox');
+  // 我的牌
+  var live = myHole.length === 2 && myHoleHand === ST.hand.no && ST.hand.phase !== 'idle';
+  paint('myCards', live
+    ? '<span class="lbl">你的牌</span>' + myHole.map(function (c) { return cardHTML(c); }).join('')
+    : '');
+  $('myCards').style.display = live ? '' : 'none';
 
   if (mySeat < 0) {
-    box.classList.remove('on');
-    row.innerHTML = '<div class="waiting">正在幫你找位子…</div>';
-    if (!renderActions._asked) {
-      renderActions._asked = true;
-      send('join', { name: myName || myId });
-    }
-    return;
-  }
-  var me = ST.seats[mySeat];
-
-  if (me.chips <= 0 && ST.hand.phase === 'idle') {
-    box.classList.remove('on');
-    row.innerHTML = '<div class="waiting">你出局了，等主辦補碼</div>';
-    return;
-  }
-
-  if (ST.hand.turnSeat !== mySeat) {
-    box.classList.remove('on');
     raiseOpen = false;
-    var msg = ST.hand.phase === 'idle'
-      ? (LOOP.autoLeft > 0 ? LOOP.autoLeft + ' 秒後開下一手' : '等下一手開始')
-      : '等別人動作';
-    if (me.state === 'waiting') msg = '下一手才輪到你';
-    if (me.state === 'sitout') msg = '你目前暫離中';
-    row.innerHTML = '<div class="waiting">' + msg + '</div>';
+    $('raiseBox').classList.remove('on');
+    bar.innerHTML = qp
+      ? '<div class="waiting">候補中 · 第 ' + qp + ' 位</div>' +
+        '<button class="btn ghost" data-a="leave">取消候補</button>'
+      : '<button class="btn" data-a="join">加入牌桌</button>';
+    bindBar();
+    return;
+  }
+
+  var p = ST.seats[mySeat];
+  if (!p) { mySeat = -1; renderBar(); return; }
+  var turn = ST.hand.turnSeat === mySeat;
+
+  if (!turn) {
+    raiseOpen = false;
+    $('raiseBox').classList.remove('on');
+    var msg;
+    if (ST.hand.phase === 'idle') {
+      msg = LOOP.autoLeft > 0 ? LOOP.autoLeft + ' 秒後開下一手' : '等下一手開始';
+    } else {
+      var t = ST.hand.turnSeat >= 0 && ST.seats[ST.hand.turnSeat]
+        ? ST.seats[ST.hand.turnSeat].name : '—';
+      var left = turnLeft();
+      msg = '等 ' + esc(t) + ' 動作' + (left >= 0 ? '（' + left + '）' : '');
+    }
+    if (p.leaveAfter) msg = '這手結束後就會離開';
+    else if (p.chips <= 0 && ST.hand.phase === 'idle') msg = '你出局了，找主辦補碼';
+    bar.innerHTML = '<div class="waiting">' + msg + '</div>' +
+      (ST.hand.phase === 'idle' && !p.leaveAfter
+        ? '<button class="btn ghost" data-a="leave">離開牌桌</button>'
+        : (!p.leaveAfter ? '<button class="btn ghost" data-a="leave">這手結束後離開</button>' : ''));
+    bindBar();
     return;
   }
 
   var L = Engine.legalMoves(ST, mySeat);
-  var html = '<div class="act-row"><button class="btn danger" data-a="fold">蓋牌</button>';
-  html += L.check ? '<button class="btn ghost" data-a="check">過牌</button>'
-                  : '<button class="btn ghost" data-a="call">跟 ' + fmt(L.call) + '</button>';
+  var left = turnLeft();
+  var h = '<div class="turn-hint">輪到你' + (left >= 0 ? '　<b>' + left + '</b> 秒' : '') + '</div>';
+  h += '<div class="act-row"><button class="btn danger" data-a="fold">蓋牌</button>';
+  h += L.check ? '<button class="btn ghost" data-a="check">過牌</button>'
+               : '<button class="btn ghost" data-a="call">跟 ' + fmt(L.call) + '</button>';
   if (L.maxRaise > 0) {
-    html += '<button class="btn" data-a="raiseOpen">' + (ST.hand.currentBet === 0 ? '下注' : '加注') + '</button>';
+    h += '<button class="btn" data-a="open">' + (ST.hand.currentBet === 0 ? '下注' : '加注') + '</button>';
   }
-  html += '</div>';
-  if (!paint('actRow', html)) {
-    if (raiseOpen) setupRaise(L);
-    return;
-  }
+  h += '</div>';
+  if (!p.leaveAfter) h += '<button class="leave-link" data-a="leave">這手結束後離開</button>';
+  bar.innerHTML = h;
+  bindBar();
+  if (raiseOpen) setupRaise(L); else $('raiseBox').classList.remove('on');
+}
 
-  Array.prototype.slice.call(row.querySelectorAll('[data-a]')).forEach(function (b) {
-    b.addEventListener('click', function () {
+function bindBar() {
+  Array.prototype.slice.call($('bar').querySelectorAll('[data-a]')).forEach(function (b) {
+    b.onclick = function () {
       var a = b.getAttribute('data-a');
-      if (a === 'raiseOpen') { raiseOpen = true; setupRaise(L); return; }
+      if (a === 'open') {
+        raiseOpen = true;
+        setupRaise(Engine.legalMoves(ST, mySeat));
+        return;
+      }
       raiseOpen = false;
-      send(a);
-    });
+      if (a === 'join') send('join', { name: myName });
+      else if (a === 'leave') send('leave');
+      else send(a);
+    };
   });
-
-  if (raiseOpen) setupRaise(L); else box.classList.remove('on');
 }
 
 function setupRaise(L) {
@@ -2490,96 +2605,21 @@ function setupRaise(L) {
       val.value = sl.value = Math.max(L.minRaise, Math.min(L.maxRaise, Math.round(v)));
     };
   });
-
-  $('raiseCancel').onclick = function () { raiseOpen = false; box.classList.remove('on'); };
-
-  var row = $('actRow');
-  if (!row.querySelector('[data-a="confirmRaise"]')) {
-    var b = document.createElement('button');
-    b.className = 'btn';
-    b.style.marginTop = '8px';
-    b.setAttribute('data-a', 'confirmRaise');
-    b.textContent = '確認';
-    b.onclick = function () {
-      var v = Math.round(+val.value);
-      raiseOpen = false;
-      send(v >= L.maxRaise ? 'allin' : 'raise', { amount: v });
-    };
-    row.appendChild(b);
-  }
+  $('raiseGo').onclick = function () {
+    var v = Math.round(+val.value);
+    raiseOpen = false;
+    box.classList.remove('on');
+    send(v >= L.maxRaise ? 'allin' : 'raise', { amount: v });
+  };
+  $('raiseNo').onclick = function () { raiseOpen = false; box.classList.remove('on'); };
 }
 
-/* ---------- 抽屜 ---------- */
-$('drawerBtn').addEventListener('click', function () { $('drawer').classList.add('on'); renderDrawer(); });
-$('drawer').addEventListener('click', function (e) { if (e.target === $('drawer')) $('drawer').classList.remove('on'); });
-
-/* 抽屜裡有輸入框正在用就別重畫，不然打到一半會被清掉 */
-function drawerBusy() {
-  var a = document.activeElement;
-  if (!a) return false;
-  var tag = (a.tagName || '').toLowerCase();
-  if (tag !== 'input' && tag !== 'select' && tag !== 'textarea') return false;
-  var box = $('drawerInner');
-  return !!(box && box.contains(a));
-}
-
-function renderDrawer() {
-  var h = '<h3>牌桌</h3><p class="hint">編號 ' + myId +
-          '　<span class="build">版本 ' + BUILD + '</span></p>';
-
-  if (!ST) {
-    h += '<div class="sec">狀態</div>';
-    h += '<p class="hint">牌桌還沒載入。如果一直停在這裡，代表 Firestore 讀不到 tables/main，' +
-         '可能是規則沒更新。</p>';
-    h += '<button class="btn" style="margin-top:10px" id="mkTable">建立牌桌</button>';
-    h += admHTML();
-    if (!paint('drawerInner', h)) return;
-    if ($('mkTable')) $('mkTable').onclick = function () { ensureTableExists(); };
-    admBind();
-    return;
-  }
-
-  h += '<div class="sec">盲注</div><p class="hint">小盲 ' + fmt(ST.settings.sb) + '　大盲 ' + fmt(ST.settings.bb) + '</p>';
-  h += '<div class="sec">紀錄</div><div class="logbox">' +
-       (ST.log || []).slice().reverse().map(function (l) { return esc(l.text); }).join('<br>') + '</div>';
-  h += '<div class="sec">你</div>';
-  if (mySeat >= 0) {
-    var me = ST.seats[mySeat];
-    h += '<button class="btn ghost" id="toggleSitout">' +
-         (me.state === 'sitout' ? '我要繼續玩' : '這幾輪先不玩') + '</button>';
-    h += '<p class="hint" style="margin-top:9px">開著的話會直接跳過你，不用一直蓋牌。想回來隨時按。</p>';
-  }
-  h += '<button class="btn ghost" style="margin-top:8px" id="muteBtn">' +
-       (FX.muted ? '音效與震動：關' : '音效與震動：開') + '</button>';
-  h += '<button class="btn danger" style="margin-top:8px" id="logout">登出</button>';
-  h += admHTML();
-  if (!paint('drawerInner', h)) return;
-  admBind();
-
-  if ($('toggleSitout')) $('toggleSitout').onclick = function () {
-    send('sitout', { value: ST.seats[mySeat].state !== 'sitout' });
-    $('drawer').classList.remove('on');
-  };
-  $('muteBtn').onclick = function () {
-    FX.muted = !FX.muted;
-    LS.set('muted', FX.muted);
-    if (!FX.muted) SFX.chip();
-    renderDrawer();
-  };
-  $('logout').onclick = function () {
-    auth.signOut().then(function () { location.reload(); });
-  };
-}
-
-window.addEventListener('resize', function () { if (ST) renderSeats(true); });
-
-/* ================= 啟動 ================= */
-$('loginBtn').disabled = true;
-signIn().then(function () {
-  $('loginBtn').disabled = false;
-}).catch(function () {
-  toast('連不上 Firebase，「匿名」登入可能沒開', 'bad');
-});
+/* 保險絲：輪到我卻沒有東西可按就重畫 */
+setInterval(function () {
+  if (!ST || TAB !== 'table' || mySeat < 0) return;
+  if (ST.hand.turnSeat !== mySeat) return;
+  if (!$('bar').querySelector('[data-a]')) renderBar();
+}, 2000);
 
 })();
 </script>
