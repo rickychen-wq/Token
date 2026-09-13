@@ -1299,7 +1299,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:24px}
 <script>
 (function(){
 'use strict';
-var BUILD = '0913-0640';
+var BUILD = '0913-1102';
 /* ================= Firebase ================= */
 var FB_CONFIG = {
   apiKey: "AIzaSyC1ypnHgPuhjoe6u7D-opVzQSZEgv9q34k",
@@ -1479,6 +1479,7 @@ var LOOP = {
   roster: [],
   dealtHand: -1,
   statsHand: -1,
+  lastClaim: 0,
   turnKey: null,
   turnAt: 0,
   onState: function () {},
@@ -1575,6 +1576,10 @@ function loopOnSnapshot(d) {
 }
 
 function claimLease() {
+  // 節流：租約資料萬一有問題，不能讓所有裝置無限互搶把額度燒光
+  var now = Date.now();
+  if (now - (LOOP.lastClaim || 0) < 3000) return Promise.resolve();
+  LOOP.lastClaim = now;
   return TABLE.update({
     leaseUid: uid, leaseOwner: LOOP.me, leaseAt: FV.serverTimestamp()
   }).catch(function () {});
@@ -2258,6 +2263,15 @@ $('loginBtn').addEventListener('click', function () {
 
 $('pid').value = LS.get('lastId', '');
 
+/* 先拿到匿名身分，拿不到就不讓人按，免得按了沒反應 */
+$('loginBtn').disabled = true;
+signIn().then(function () {
+  $('loginBtn').disabled = false;
+  if ($('pid').value.length === 2) lookup($('pid').value);
+}).catch(function (e) {
+  toast('連不上 Firebase：' + (e.code || e.message) + '（匿名登入沒開？）', 'bad');
+});
+
 /* ================= 啟動 ================= */
 function boot() {
   $('gate').style.display = 'none';
@@ -2507,6 +2521,8 @@ function seatNode(i) {
 /* ---------- 下方操作區 ---------- */
 function renderBar() {
   var bar = $('bar');
+  // 座位可能在上一刻被清空（離桌、被移除），先校正再判斷，不要遞迴
+  if (mySeat >= 0 && !ST.seats[mySeat]) mySeat = -1;
   var qp = Engine.queuePos(ST, myId);
 
   // 我的牌
@@ -2528,7 +2544,6 @@ function renderBar() {
   }
 
   var p = ST.seats[mySeat];
-  if (!p) { mySeat = -1; renderBar(); return; }
   var turn = ST.hand.turnSeat === mySeat;
 
   if (!turn) {
