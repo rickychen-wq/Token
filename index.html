@@ -152,9 +152,29 @@ input,select{font-family:var(--ui);font-size:16px;font-weight:600}
 .hero-grid span{font-size:10.5px;color:var(--fg-faint);letter-spacing:.06em}
 
 .lb{
-  border-radius:4px;margin-bottom:14px;overflow:hidden;
+  position:relative;border-radius:6px;margin-bottom:16px;
   background:linear-gradient(160deg,var(--glass),var(--glass-2));
-  border:1px solid var(--edge);
+  padding:1px;isolation:isolate;
+}
+.lb::before{
+  content:'';position:absolute;inset:0;border-radius:6px;z-index:-1;
+  background:conic-gradient(from var(--spin,0deg),
+    #3FC7FF,#8B5CFF,#FF3D7F,#FFD37A,#4BE38F,#3FC7FF);
+  animation:spin 6s linear infinite;
+}
+.lb::after{
+  content:'';position:absolute;inset:-6px;border-radius:10px;z-index:-2;
+  background:conic-gradient(from var(--spin,0deg),
+    #3FC7FF,#8B5CFF,#FF3D7F,#FFD37A,#4BE38F,#3FC7FF);
+  filter:blur(13px);opacity:.34;animation:spin 6s linear infinite;
+}
+.lb > *{position:relative;background:#070E1C}
+.lb > *:first-child{border-radius:5px 5px 0 0}
+.lb > *:last-child{border-radius:0 0 5px 5px}
+@property --spin{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes spin{to{--spin:360deg}}
+@supports not (background:conic-gradient(from 0deg,red,blue)){
+  .lb::before,.lb::after{background:var(--edge-hot);animation:none}
 }
 .lb-h{
   padding:12px 15px 10px;font-family:var(--dsp);font-weight:700;font-size:12px;
@@ -167,6 +187,7 @@ input,select{font-family:var(--ui);font-size:16px;font-weight:600}
 .lb-empty{padding:18px;text-align:center;color:var(--fg-faint);font-size:12.5px}
 .lb-row{display:flex;align-items:center;gap:11px;padding:10px 15px;border-bottom:1px solid rgba(88,190,255,.07)}
 .lb-row:last-child{border-bottom:0}
+.lb-row{background:#070E1C}
 .lb-row.me{background:rgba(63,199,255,.09)}
 .lb-row .rk{
   width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
@@ -267,12 +288,14 @@ input,select{font-family:var(--ui);font-size:16px;font-weight:600}
 .raise-box{display:none;padding:10px 12px 0;flex:none}
 .raise-box.on{display:block;animation:slideUp .2s ease-out}
 @keyframes slideUp{from{transform:translateY(10px);opacity:0}}
-.raise-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.raise-top input{
-  flex:1;padding:11px;border-radius:3px;text-align:center;
-  font-family:var(--dsp);font-weight:700;font-size:19px;color:var(--gold);
+.raise-box #raiseVal{
+  display:block;width:100%;padding:12px 6px;border-radius:3px;text-align:center;
+  font-family:var(--dsp);font-weight:700;font-size:22px;color:var(--gold);
   background:rgba(4,10,20,.7);border:1px solid rgba(255,211,122,.35);
+  margin-bottom:8px;
 }
+.raise-btns{display:flex;gap:8px;margin-top:9px}
+.raise-btns .btn{flex:1;padding:13px 4px}
 .quick{display:flex;gap:6px}
 .quick button{
   flex:1;padding:9px 2px;border-radius:3px;font-family:var(--ui);font-weight:600;font-size:12px;
@@ -411,17 +434,17 @@ input[type=range]{width:100%;accent-color:var(--cy);height:24px}
       </div>
       <div class="my-cards" id="myCards"></div>
       <div class="raise-box" id="raiseBox">
-        <div class="raise-top">
-          <input type="number" id="raiseVal" step="1">
-          <button class="iconbtn" id="raiseNo">取消</button>
-          <button class="iconbtn go" id="raiseGo">確認</button>
-        </div>
+        <input type="number" id="raiseVal" step="1" inputmode="numeric">
         <input type="range" id="raiseSlider">
         <div class="quick">
           <button data-q="min">最小</button>
           <button data-q="half">½ 池</button>
           <button data-q="pot">滿池</button>
           <button data-q="all">全下</button>
+        </div>
+        <div class="raise-btns">
+          <button class="btn ghost" id="raiseNo">取消</button>
+          <button class="btn" id="raiseGo">確認</button>
         </div>
       </div>
       <div class="bar" id="bar"></div>
@@ -1301,7 +1324,7 @@ input[type=range]{width:100%;accent-color:var(--cy);height:24px}
 <script>
 (function(){
 'use strict';
-var BUILD = '0913-1543';
+var BUILD = '0916-0012';
 /* ================= Firebase ================= */
 var FB_CONFIG = {
   apiKey: "AIzaSyC1ypnHgPuhjoe6u7D-opVzQSZEgv9q34k",
@@ -1778,14 +1801,16 @@ function loopFlush() {
   }
 
   // 一手打完，把籌碼和戰績寫回名單
-  if (st.lastResults && st.lastResults.hand !== LOOP.statsHand) {
+  if (st.lastResults && st.lastResults.hand > LOOP.statsHand) {
     LOOP.statsHand = st.lastResults.hand;
     st.lastResults.rows.forEach(function (row) {
       var r = rosterOf(row.id) || {};
       var patch = { chips: row.chips };
+      // 勝場和手數用原子遞增，不能先讀快取再加一，
+      // 快取只要沒跟上就會一直算出 0+1，每個人永遠停在 1
+      if (row.won) patch.wins = FV.increment(1);
+      if (row.played) patch.hands = FV.increment(1);
       if (row.chips > (r.peak || 0)) patch.peak = row.chips;
-      if (row.won) patch.wins = (r.wins || 0) + 1;
-      if (row.played) patch.hands = (r.hands || 0) + 1;
       jobs.push(db.collection('roster').doc(String(row.id)).update(patch).catch(function () {}));
     });
   }
@@ -2203,7 +2228,7 @@ function editPw(id) {
 
 var myId = null, myName = '', isNew = false;
 var ST = null, mySeat = -1, myHole = [], myHoleHand = -1;
-var ROSTER = [], TAB = 'home', raiseOpen = false, unsubs = [];
+var ROSTER = [], TAB = 'home', raiseOpen = false, raiseReady = false, unsubs = [];
 var _paint = {};
 
 function paint(id, html) {
@@ -2589,7 +2614,7 @@ function renderBar() {
   var turn = ST.hand.turnSeat === mySeat;
 
   if (!turn) {
-    raiseOpen = false;
+    raiseOpen = false; raiseReady = false;
     $('raiseBox').classList.remove('on');
     var msg;
     if (ST.hand.phase === 'idle') {
@@ -2627,7 +2652,7 @@ function bindBar() {
     b.onclick = function () {
       var a = b.getAttribute('data-a');
       if (a === 'open') {
-        raiseOpen = true;
+        raiseOpen = true; raiseReady = false;
         setupRaise(Engine.legalMoves(ST, mySeat));
         return;
       }
@@ -2643,10 +2668,23 @@ function setupRaise(L) {
   var box = $('raiseBox'), val = $('raiseVal'), sl = $('raiseSlider');
   box.classList.add('on');
   sl.min = L.minRaise; sl.max = L.maxRaise; sl.step = 1;
-  if (!val.value || +val.value < L.minRaise || +val.value > L.maxRaise) val.value = L.minRaise;
-  sl.value = val.value;
+
+  // 只有剛打開時才填預設值。之後每秒重繪都不准動它，
+  // 不然打「150」打到「1」就會被判定太小、直接改成最小加注
+  if (!raiseReady) {
+    val.value = L.minRaise;
+    sl.value = L.minRaise;
+    raiseReady = true;
+  } else if (document.activeElement !== val) {
+    var v = +val.value;
+    if (v >= L.minRaise && v <= L.maxRaise) sl.value = v;
+  }
+
   sl.oninput = function () { val.value = sl.value; };
-  val.oninput = function () { sl.value = val.value; };
+  val.oninput = function () {
+    var v = +val.value;
+    if (v >= L.minRaise && v <= L.maxRaise) sl.value = v;
+  };
 
   Array.prototype.slice.call(box.querySelectorAll('[data-q]')).forEach(function (b) {
     b.onclick = function () {
@@ -2659,12 +2697,18 @@ function setupRaise(L) {
     };
   });
   $('raiseGo').onclick = function () {
-    var v = Math.round(+val.value);
-    raiseOpen = false;
+    // 送出前才夾住範圍
+    var v = Math.round(+val.value || 0);
+    if (v < L.minRaise) v = L.minRaise;
+    if (v > L.maxRaise) v = L.maxRaise;
+    raiseOpen = false; raiseReady = false;
     box.classList.remove('on');
     send(v >= L.maxRaise ? 'allin' : 'raise', { amount: v });
   };
-  $('raiseNo').onclick = function () { raiseOpen = false; box.classList.remove('on'); };
+  $('raiseNo').onclick = function () {
+    raiseOpen = false; raiseReady = false;
+    box.classList.remove('on');
+  };
 }
 
 /* 保險絲：輪到我卻沒有東西可按就重畫 */
